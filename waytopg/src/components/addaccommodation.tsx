@@ -111,50 +111,40 @@ const AddAccommodationPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return; // Prevent multiple submissions
+    
+    if (!validateForm()) return;
+    
     setIsLoading(true);
     setError('');
 
-    if (!validateForm()) {
-      setIsLoading(false);
-      return;
-    }
-
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+
       const formDataToSend = new FormData();
       
       // Append all form fields
       Object.entries(formData).forEach(([key, value]) => {
         if (Array.isArray(value)) {
-          formDataToSend.append(key, JSON.stringify(value));
+          // Filter out empty rules and stringify the array
+          const cleanedArray = value.filter(item => item !== '');
+          formDataToSend.append(key, JSON.stringify(cleanedArray));
         } else {
           formDataToSend.append(key, value.toString());
         }
       });
 
-      // Append images
-      images.forEach((image) => {
-        formDataToSend.append('images', image);
-      });
-
-      const result = await fetch('https://waytopg-backend.onrender.com/api/owner/accommodations', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formDataToSend,
-      });
-
-      if (!result.ok) {
-        const data = await result.json();
-        throw new Error(data.message || 'Failed to create accommodation');
-      }
-
-      navigate('/owner/dashboard');
-
-      // Append images
-      images.forEach(image => {
-        formDataToSend.append('images', image);
+      // Append images with unique names to prevent duplicates
+      images.forEach((image, index) => {
+        // Create a new filename with a timestamp to ensure uniqueness
+        const timestamp = Date.now();
+        const newFile = new File([image], `${timestamp}_${index}_${image.name}`, {
+          type: image.type
+        });
+        formDataToSend.append('images', newFile);
       });
 
       const response = await fetch('https://waytopg-backend.onrender.com/api/owner/accommodations', {
@@ -165,12 +155,13 @@ const AddAccommodationPage: React.FC = () => {
         body: formDataToSend,
       });
 
-      if (response.ok) {
-        navigate('/owner-dashboard');
-      } else {
-        const data = await response.json();
-        setError(data.message || 'Failed to add accommodation');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to create accommodation (${response.status})`);
       }
+
+      // Successfully created, navigate to dashboard
+      navigate('/owner-dashboard');
     } catch (error) {
       console.error('Error adding accommodation:', error);
       setError('An error occurred while adding the accommodation');
