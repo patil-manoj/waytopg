@@ -8,22 +8,40 @@ const router = express.Router();
 
 router.post('/accommodations', auth, requireRole(['owner']), upload.array('images', 10), async (req, res) => {
   try {
-    const imageUploadPromises = req.files?.map(async (file) => {
-      const result = await uploadToCloudinary(file.buffer, 'waytopg_accommodations');
-      return {
-        url: result.secure_url,
-        public_id: result.public_id
-      };
-    }) || [];
+    // Upload images sequentially to avoid race conditions
+    const uploadedImages = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        try {
+          const result = await uploadToCloudinary(file.buffer, 'waytopg_accommodations');
+          uploadedImages.push({
+            url: result.secure_url,
+            public_id: result.public_id
+          });
+        } catch (error) {
+          console.error('Error uploading image:', error);
+          // Continue with the rest of the images if one fails
+        }
+      }
+    }
 
-    const uploadedImages = await Promise.all(imageUploadPromises);
-
+    // Parse and validate the body data
+    const amenities = JSON.parse(req.body.amenities || '[]');
+    const rules = JSON.parse(req.body.rules || '[]');
+    
+    // Create and save the accommodation
     const accommodation = new Accommodation({
-      ...req.body,
+      name: req.body.name,
+      description: req.body.description,
+      address: req.body.address,
+      city: req.body.city,
+      price: req.body.price,
+      type: req.body.type,
+      roomType: req.body.roomType,
       owner: req.user._id,
       images: uploadedImages,
-      amenities: JSON.parse(req.body.amenities || '[]'),
-      rules: JSON.parse(req.body.rules || '[]')
+      amenities: amenities.filter(Boolean), // Remove any empty values
+      rules: rules.filter(Boolean) // Remove any empty values
     });
     
     await accommodation.save();
