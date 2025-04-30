@@ -1,20 +1,15 @@
 import express from 'express';
 import { auth, requireRole } from '../middleware/auth.js';
 import Accommodation from '../models/Accommodation.js';
-import cloudinary from '../config/cloudinary.js';
-import multer from 'multer';
+import upload from '../middleware/upload.js';
+import { uploadToCloudinary, deleteFromCloudinary } from '../utils/cloudinary.js';
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage() });
 
 router.post('/accommodations', auth, requireRole(['owner']), upload.array('images', 10), async (req, res) => {
   try {
     const imageUploadPromises = req.files?.map(async (file) => {
-      const b64 = Buffer.from(file.buffer).toString('base64');
-      const dataURI = `data:${file.mimetype};base64,${b64}`;
-      const result = await cloudinary.uploader.upload(dataURI, {
-        folder: 'waytopg_accommodations',
-      });
+      const result = await uploadToCloudinary(file.buffer, 'waytopg_accommodations');
       return {
         url: result.secure_url,
         public_id: result.public_id
@@ -45,6 +40,32 @@ router.get('/accommodations', auth, requireRole(['owner']), async (req, res) => 
     res.json(accommodations);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching accommodations' });
+  }
+});
+
+router.delete('/accommodations/:id', auth, requireRole(['owner']), async (req, res) => {
+  try {
+    const accommodation = await Accommodation.findOne({ 
+      _id: req.params.id, 
+      owner: req.user._id 
+    });
+
+    if (!accommodation) {
+      return res.status(404).json({ message: 'Accommodation not found' });
+    }
+
+    // Delete images from Cloudinary
+    const deletePromises = accommodation.images.map(image => 
+      deleteFromCloudinary(image.public_id)
+    );
+    await Promise.all(deletePromises);
+
+    // Delete the accommodation
+    await Accommodation.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Accommodation deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting accommodation:', error);
+    res.status(500).json({ message: 'Error deleting accommodation' });
   }
 });
 

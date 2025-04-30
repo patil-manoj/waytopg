@@ -43,7 +43,20 @@ const AddAccommodationPage: React.FC = () => {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setImages(prev => [...prev, ...files]);
+    const validFiles = files.filter(file => {
+      const isValid = file.type.startsWith('image/');
+      if (!isValid) {
+        setError('Please upload only image files');
+      }
+      return isValid;
+    });
+    
+    if (validFiles.length + images.length > 10) {
+      setError('Maximum 10 images allowed');
+      return;
+    }
+    
+    setImages(prev => [...prev, ...validFiles]);
   };
 
   const handleRemoveImage = (index: number) => {
@@ -80,10 +93,31 @@ const AddAccommodationPage: React.FC = () => {
     }));
   };
 
+  const validateForm = () => {
+    if (!formData.name || !formData.address || !formData.price) {
+      setError('Please fill in all required fields');
+      return false;
+    }
+    if (images.length === 0) {
+      setError('Please upload at least one image');
+      return false;
+    }
+    if (images.length > 10) {
+      setError('Maximum 10 images allowed');
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+
+    if (!validateForm()) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const token = localStorage.getItem('token');
@@ -94,9 +128,29 @@ const AddAccommodationPage: React.FC = () => {
         if (Array.isArray(value)) {
           formDataToSend.append(key, JSON.stringify(value));
         } else {
-          formDataToSend.append(key, value);
+          formDataToSend.append(key, value.toString());
         }
       });
+
+      // Append images
+      images.forEach((image) => {
+        formDataToSend.append('images', image);
+      });
+
+      const result = await fetch('https://waytopg-backend.onrender.com/api/owner/accommodations', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formDataToSend,
+      });
+
+      if (!result.ok) {
+        const data = await result.json();
+        throw new Error(data.message || 'Failed to create accommodation');
+      }
+
+      navigate('/owner/dashboard');
 
       // Append images
       images.forEach(image => {
