@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://waytopg.netlify.app/</loc>
+    <priority>1.00</priority>
+  </url>
+  <url>
+    <loc>https://waytopg.netlify.app/login</loc>
+  </url>
+  <url>
+    <loc>https://waytopg.netlify.app/signup</loc>
+  </url>
+  <url>
+    <loc>https://waytopg.netlify.app/admin-login</loc>
+  </url>
+  <url>
+    <loc>https://waytopg.netlify.app/owner-login</loc>
+  </url>
+  <url>
+    <loc>https://waytopg.netlify.app/add-accommodation</loc>
+  </url>
+  <url>
+    <loc>https://waytopg.netlify.app/admin-dashboard</loc>
+  </url>
+  <url>
+    <loc>https://waytopg.netlify.app/owner-dashboard</loc>
+  </url>
+  <url>
+    <loc>https://waytopg.netlify.app/user-dashboard</loc>
+  </url>
+  <url>
+    <loc>https://waytopg.netlify.app/accommodations</loc>
+  </url>
+  <url>
+    <loc>https://waytopg.netlify.app/about</loc>
+  </url>
+</urlset>
