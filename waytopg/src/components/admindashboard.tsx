@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-// import { Link } from 'react-router-dom';
-// import Header from '../components/Header';
+import { RefreshCw, Users, Home, BookOpen } from 'lucide-react';
 import Footer from './Footer';
 import Button from './Button';
 import Navbar from './navbar';
@@ -35,6 +34,13 @@ const AdminDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<'users' | 'analytics'>('users');
   const [filterRole, setFilterRole] = useState<'all' | 'owner' | 'student'>('all');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchDashboardData();
+    setIsRefreshing(false);
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -70,33 +76,52 @@ const AdminDashboard: React.FC = () => {
         })
       ]);
 
-      // Check for specific error responses
-      if (usersResponse.status === 401 || statsResponse.status === 401) {
-        setError('Session expired. Please login again.');
-        return;
+      // Handle response errors
+      if (!usersResponse.ok || !statsResponse.ok) {
+        const status = usersResponse.status || statsResponse.status;
+        switch (status) {
+          case 401:
+            setError('Your session has expired. Please login again.');
+            localStorage.removeItem('token');
+            localStorage.removeItem('userRole');
+            return;
+          case 403:
+            setError('You do not have permission to access this data. Please login as admin.');
+            return;
+          case 404:
+            setError('Required data not found. Please try again later.');
+            return;
+          case 500:
+            setError('Server error. Please try again later.');
+            return;
+          default:
+            setError('Failed to fetch dashboard data. Please try again.');
+            return;
+        }
       }
 
-      if (usersResponse.status === 403 || statsResponse.status === 403) {
-        setError('You do not have permission to access this data.');
-        return;
-      }
-
-      if (usersResponse.ok && statsResponse.ok) {
+      // Parse response data
+      try {
         const [usersData, statsData] = await Promise.all([
           usersResponse.json(),
           statsResponse.json()
         ]);
         
-        setUsers(usersData.users || []);
-        setStats(statsData || {
-          totalUsers: 0,
-          pendingApprovals: 0,
-          totalAccommodations: 0,
-          totalBookings: 0
+        if (!Array.isArray(usersData.users)) {
+          throw new Error('Invalid users data received');
+        }
+
+        setUsers(usersData.users);
+        setStats({
+          totalUsers: statsData.totalUsers || 0,
+          pendingApprovals: statsData.pendingApprovals || 0,
+          totalAccommodations: statsData.totalAccommodations || 0,
+          totalBookings: statsData.totalBookings || 0
         });
-      } else {
-        const errorData = await usersResponse.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to fetch dashboard data');
+      } catch (error) {
+        console.error('Error parsing response:', error);
+        setError('Error processing server response. Please try again.');
+        return;
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -185,22 +210,49 @@ const AdminDashboard: React.FC = () => {
           </Button>
         </div>
         
+        {/* Header with Refresh */}
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-3xl font-bold text-gray-800">Dashboard Overview</h2>
+          <button
+            onClick={handleRefresh}
+            disabled={loading || isRefreshing}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white transition-all ${
+              loading || isRefreshing ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
+          >
+            <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+        </div>
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-xl shadow-md">
-            <h4 className="text-gray-500 text-sm">Total Users</h4>
+          <div className="bg-white p-6 rounded-xl shadow-md">
+            <div className="flex items-center gap-3 mb-2">
+              <Users className="w-5 h-5 text-blue-600" />
+              <h4 className="text-gray-500 text-sm">Total Users</h4>
+            </div>
             <p className="text-2xl font-bold">{stats.totalUsers}</p>
           </div>
-          <div className="bg-white p-4 rounded-xl shadow-md">
-            <h4 className="text-gray-500 text-sm">Pending Approvals</h4>
+          <div className="bg-white p-6 rounded-xl shadow-md">
+            <div className="flex items-center gap-3 mb-2">
+              <Users className="w-5 h-5 text-orange-500" />
+              <h4 className="text-gray-500 text-sm">Pending Approvals</h4>
+            </div>
             <p className="text-2xl font-bold text-orange-500">{stats.pendingApprovals}</p>
           </div>
-          <div className="bg-white p-4 rounded-xl shadow-md">
-            <h4 className="text-gray-500 text-sm">Total Accommodations</h4>
+          <div className="bg-white p-6 rounded-xl shadow-md">
+            <div className="flex items-center gap-3 mb-2">
+              <Home className="w-5 h-5 text-green-600" />
+              <h4 className="text-gray-500 text-sm">Total Accommodations</h4>
+            </div>
             <p className="text-2xl font-bold">{stats.totalAccommodations}</p>
           </div>
-          <div className="bg-white p-4 rounded-xl shadow-md">
-            <h4 className="text-gray-500 text-sm">Total Bookings</h4>
+          <div className="bg-white p-6 rounded-xl shadow-md">
+            <div className="flex items-center gap-3 mb-2">
+              <BookOpen className="w-5 h-5 text-purple-600" />
+              <h4 className="text-gray-500 text-sm">Total Bookings</h4>
+            </div>
             <p className="text-2xl font-bold">{stats.totalBookings}</p>
           </div>
         </div>

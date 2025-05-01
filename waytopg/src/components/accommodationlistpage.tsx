@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-// import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Button from '../components/Button';
-import { Search, MapPin, Star, } from 'lucide-react';
+import { Search, MapPin, Star, RefreshCw, Loader } from 'lucide-react';
 import Navbar from './navbar';
+
+interface AccommodationResponse {
+  _id: string;
+  name: string;
+  address: string;
+  price: number;
+  rating?: number;
+  images?: Array<{ url: string }>;
+  type?: string;
+}
 
 interface Accommodation {
   id: string;
@@ -34,28 +43,58 @@ const AccommodationListPage: React.FC = () => {
     }
   }, [searchParams]);
 
-  useEffect(() => {
-    // In a real application, this would be an API call
-    const fetchAccommodations = async () => {
-      // Simulating API call
-      const data: Accommodation[] = [
-        { id: '1', name: 'Luxury Loft', address: '123 College St', price: 800, rating: 4.8, image: '/placeholder.svg?height=300&width=400', type: 'Apartment' },
-        { id: '2', name: 'Cozy Studio', address: '456 University Ave', price: 500, rating: 4.2, image: '/placeholder.svg?height=300&width=400', type: 'Studio' },
-        { id: '3', name: 'Spacious Suite', address: '789 Campus Rd', price: 700, rating: 4.6, image: '/placeholder.svg?height=300&width=400', type: 'Suite' },
-        { id: '4', name: 'Modern Dorm', address: '101 Dorm Lane', price: 400, rating: 4.0, image: '/placeholder.svg?height=300&width=400', type: 'Dorm' },
-        { id: '5', name: 'Eco-Friendly Flat', address: '202 Green St', price: 600, rating: 4.5, image: '/placeholder.svg?height=300&width=400', type: 'Apartment' },
-        { id: '6', name: 'Historic Townhouse', address: '303 Heritage Ave', price: 900, rating: 4.7, image: '/placeholder.svg?height=300&width=400', type: 'House' },
-      ];
-      setAccommodations(data);
-      setFilteredAccommodations(data);
-    };
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+  const fetchAccommodations = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch('https://waytopg-dev.onrender.com/api/accommodations', {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to fetch accommodations');
+      }
+
+      const data: AccommodationResponse[] = await response.json();
+      
+      if (!Array.isArray(data)) {
+        throw new Error('Invalid data format received from server');
+      }
+
+      // Transform the data to match our interface
+      const transformedData: Accommodation[] = data.map((acc: AccommodationResponse) => ({
+        id: acc._id,
+        name: acc.name || 'Unnamed Accommodation',
+        address: acc.address || 'Address not available',
+        price: typeof acc.price === 'number' ? acc.price : 0,
+        rating: acc.rating || 4.5,
+        image: acc.images?.[0]?.url || '/placeholder.svg?height=300&width=400',
+        type: acc.type || 'Apartment'
+      }));
+      
+      setAccommodations(transformedData);
+      setFilteredAccommodations(transformedData);
+    } catch (err) {
+      console.error('Error fetching accommodations:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load accommodations');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchAccommodations();
   }, []);
 
   useEffect(() => {
     const filtered = accommodations.filter(
-      (acc) =>
+      (acc: Accommodation) =>
         acc.price >= priceRange[0] &&
         acc.price <= priceRange[1] &&
         acc.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -68,7 +107,33 @@ const AccommodationListPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex flex-col">
       <Navbar />
       <main className="flex-grow container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-8 text-center text-gray-800">Find Your Perfect Accommodation</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold text-center text-gray-800">Find Your Perfect Accommodation</h1>
+          <Button 
+            onClick={fetchAccommodations}
+            variant="primary"
+            size="small"
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? 'Refreshing...' : 'Refresh'}
+          </Button>
+        </div>
+
+        {error && (
+          <div className="mb-8 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center justify-between">
+            <span>{error}</span>
+            <Button 
+              onClick={fetchAccommodations}
+              variant="secondary"
+              size="small"
+              className="ml-4"
+            >
+              Try again
+            </Button>
+          </div>
+        )}
         
         <div className="mb-8 bg-white px-6 py-4 rounded-2xl shadow-lg backdrop-blur-sm bg-opacity-90">
           <div className="flex flex-wrap md:flex-nowrap items-center gap-4">
@@ -140,47 +205,58 @@ const AccommodationListPage: React.FC = () => {
           }
         `}</style>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredAccommodations.map((accommodation) => (
-            <div key={accommodation.id} className="group bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-              <div className="relative">
-                <img src={accommodation.image} alt={accommodation.name} className="w-full h-56 object-cover transition-transform duration-300 group-hover:scale-105" />
-                <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full shadow-md">
-                  <div className="flex items-center">
-                    <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                    <span className="font-semibold text-sm">{accommodation.rating.toFixed(1)}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-2">
-                  <h2 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-200">
-                    {accommodation.name}
-                  </h2>
-                  <span className="px-3 py-1 bg-blue-50 text-blue-700 text-sm font-medium rounded-full">
-                    {accommodation.type}
-                  </span>
-                </div>
-                <p className="text-gray-600 mb-4 flex items-center text-sm">
-                  <MapPin className="w-4 h-4 mr-2 text-gray-400" /> {accommodation.address}
-                </p>
-                <div className="border-t border-gray-100 pt-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <span className="text-2xl font-bold text-blue-600">${accommodation.price}</span>
-                      <span className="text-gray-500 text-sm">/month</span>
+        {loading ? (
+          <div className="flex flex-col items-center justify-center h-64">
+            <Loader className="w-12 h-12 text-blue-600 animate-spin" />
+            <p className="mt-4 text-gray-600">Loading accommodations...</p>
+          </div>
+        ) : filteredAccommodations.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64">
+            <p className="text-gray-600">No accommodations found matching your criteria.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredAccommodations.map((accommodation) => (
+              <div key={accommodation.id} className="group bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                <div className="relative">
+                  <img src={accommodation.image} alt={accommodation.name} className="w-full h-56 object-cover transition-transform duration-300 group-hover:scale-105" />
+                  <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full shadow-md">
+                    <div className="flex items-center">
+                      <Star className="w-4 h-4 text-yellow-500 mr-1" />
+                      <span className="font-semibold text-sm">{accommodation.rating.toFixed(1)}</span>
                     </div>
-                    <Link to={`/accommodation/${accommodation.id}`}>
-                      <Button variant="primary" size="small" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors duration-200">
-                        View Details
-                      </Button>
-                    </Link>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-2">
+                    <h2 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-200">
+                      {accommodation.name}
+                    </h2>
+                    <span className="px-3 py-1 bg-blue-50 text-blue-700 text-sm font-medium rounded-full">
+                      {accommodation.type}
+                    </span>
+                  </div>
+                  <p className="text-gray-600 mb-4 flex items-center text-sm">
+                    <MapPin className="w-4 h-4 mr-2 text-gray-400" /> {accommodation.address}
+                  </p>
+                  <div className="border-t border-gray-100 pt-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <span className="text-2xl font-bold text-blue-600">${accommodation.price}</span>
+                        <span className="text-gray-500 text-sm">/month</span>
+                      </div>
+                      <Link to={`/accommodation/${accommodation.id}`}>
+                        <Button variant="primary" size="small" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors duration-200">
+                          View Details
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </main>
       <Footer />
     </div>
