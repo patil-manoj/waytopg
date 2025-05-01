@@ -14,7 +14,8 @@ const app = express();
 // app.use(cors());
 app.use(cors({
   origin: [
-    'https://waytopg.netlify.app',
+    'https://waytopg.netlify.app', // Production URL
+    'https://waytopgdev.netlify.app', // Development URL
     'http://localhost:5173' // Keep local development URL
   ],
   credentials: true,
