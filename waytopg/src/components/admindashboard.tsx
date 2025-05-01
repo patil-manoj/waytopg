@@ -39,31 +39,68 @@ const AdminDashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      setError(null); // Clear any previous errors
+      
       const token = localStorage.getItem('token');
+      const userRole = localStorage.getItem('userRole');
+      
+      if (!token) {
+        setError('Authentication token not found. Please login again.');
+        return;
+      }
+
+      if (userRole !== 'admin') {
+        setError('Unauthorized access. Please login as admin.');
+        return;
+      }
       
       // Fetch users and stats in parallel
       const [usersResponse, statsResponse] = await Promise.all([
         fetch('https://waytopg-dev.onrender.com/api/admin/users', {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         }),
         fetch('https://waytopg-dev.onrender.com/api/admin/stats', {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         })
       ]);
+
+      // Check for specific error responses
+      if (usersResponse.status === 401 || statsResponse.status === 401) {
+        setError('Session expired. Please login again.');
+        return;
+      }
+
+      if (usersResponse.status === 403 || statsResponse.status === 403) {
+        setError('You do not have permission to access this data.');
+        return;
+      }
 
       if (usersResponse.ok && statsResponse.ok) {
         const [usersData, statsData] = await Promise.all([
           usersResponse.json(),
           statsResponse.json()
         ]);
-        setUsers(usersData.users);
-        setStats(statsData);
+        
+        setUsers(usersData.users || []);
+        setStats(statsData || {
+          totalUsers: 0,
+          pendingApprovals: 0,
+          totalAccommodations: 0,
+          totalBookings: 0
+        });
       } else {
-        throw new Error('Failed to fetch dashboard data');
+        const errorData = await usersResponse.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to fetch dashboard data');
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      setError('Failed to load dashboard data');
+      setError(error instanceof Error ? error.message : 'Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
@@ -136,7 +173,17 @@ const AdminDashboard: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-blue-50 to-white flex flex-col">
       <Navbar />
       <main className="flex-grow container mx-auto px-4 py-8">
-        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Admin Dashboard</h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-3xl font-bold text-gray-800">Admin Dashboard</h2>
+          <Button
+            variant="secondary"
+            size="small"
+            onClick={() => fetchDashboardData()}
+            disabled={loading}
+          >
+            {loading ? 'Refreshing...' : 'Refresh Dashboard'}
+          </Button>
+        </div>
         
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
