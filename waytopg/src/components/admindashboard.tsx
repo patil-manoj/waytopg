@@ -52,7 +52,15 @@ const AdminDashboard: React.FC = () => {
 
   const fetchAccommodations = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('Authentication token not found. Please login again.');
+        return;
+      }
+
       const response = await fetch('https://waytopg-dev.onrender.com/api/admin/accommodations', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -61,14 +69,22 @@ const AdminDashboard: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch accommodations');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to fetch accommodations');
       }
 
       const data = await response.json();
-      setAccommodations(data.accommodations || []);
+      
+      if (!data.accommodations || !Array.isArray(data.accommodations)) {
+        throw new Error('Invalid accommodation data received');
+      }
+      
+      setAccommodations(data.accommodations);
     } catch (error) {
       console.error('Error fetching accommodations:', error);
-      setError('Failed to load accommodations');
+      setError(error instanceof Error ? error.message : 'Failed to load accommodations');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -372,61 +388,111 @@ const AdminDashboard: React.FC = () => {
           </div>
         ) : selectedTab === 'accommodations' ? (
           <div className="bg-white p-6 rounded-xl shadow-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold">Accommodation Management</h3>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-semibold text-gray-800">Accommodation Management</h3>
+              <Button
+                variant="primary"
+                size="small"
+                onClick={() => fetchAccommodations()}
+                disabled={loading}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                {loading ? 'Refreshing...' : 'Refresh'}
+              </Button>
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="py-2 px-4 text-left">Name</th>
-                    <th className="py-2 px-4 text-left">Address</th>
-                    <th className="py-2 px-4 text-left">Type</th>
-                    <th className="py-2 px-4 text-left">Price</th>
-                    <th className="py-2 px-4 text-left">Owner</th>
-                    <th className="py-2 px-4 text-left">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {accommodations.map((accommodation) => (
-                    <tr key={accommodation._id} className="border-b">
-                      <td className="py-2 px-4">{accommodation.name}</td>
-                      <td className="py-2 px-4">{accommodation.address}</td>
-                      <td className="py-2 px-4">
-                        <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">
-                          {accommodation.type}
-                        </span>
-                      </td>
-                      <td className="py-2 px-4">${accommodation.price}/month</td>
-                      <td className="py-2 px-4">
-                        <div>
-                          <div className="font-medium">{accommodation.owner.name}</div>
-                          <div className="text-sm text-gray-500">{accommodation.owner.email}</div>
-                        </div>
-                      </td>
-                      <td className="py-2 px-4 space-x-2">
-                        <Button
-                          variant="primary"
-                          size="small"
-                          onClick={() => {
-                            window.location.href = `/accommodation/${accommodation._id}/edit`;
-                          }}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="small"
-                          onClick={() => handleDeleteAccommodation(accommodation._id)}
-                        >
-                          Delete
-                        </Button>
-                      </td>
+
+            {error ? (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800">Error loading accommodations</h3>
+                    <div className="mt-2 text-sm text-red-700">{error}</div>
+                  </div>
+                </div>
+              </div>
+            ) : loading ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <p className="mt-4 text-gray-600">Loading accommodations...</p>
+              </div>
+            ) : accommodations.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                  <Home className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No accommodations found</h3>
+                <p className="text-gray-500">There are no accommodations in the system yet.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-lg border border-gray-200">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {accommodations.map((accommodation) => (
+                      <tr key={accommodation._id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="font-medium text-gray-900">{accommodation.name}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-900">{accommodation.address}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {accommodation.type}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
+                            ${accommodation.price.toLocaleString()}<span className="text-gray-500 text-xs">/month</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">{accommodation.owner.name}</div>
+                            <div className="text-sm text-gray-500">{accommodation.owner.email}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap space-x-2">
+                          <Button
+                            variant="primary"
+                            size="small"
+                            onClick={() => {
+                              window.location.href = `/accommodation/${accommodation._id}/edit`;
+                            }}
+                            className="inline-flex items-center px-3 py-1.5 text-xs"
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="small"
+                            onClick={() => handleDeleteAccommodation(accommodation._id)}
+                            className="inline-flex items-center px-3 py-1.5 text-xs"
+                          >
+                            Delete
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         ) : selectedTab === 'users' ? (
           <div className="bg-white p-6 rounded-xl shadow-md">
