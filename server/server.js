@@ -6,6 +6,7 @@ import authRoutes from './routes/auth.js';
 import adminRoutes from './routes/admin.js';
 import ownerRoutes from './routes/owner.js';
 import studentRoutes from './routes/student.js';
+import accommodationRoutes from './routes/accommodations.js';
 
 dotenv.config();
 
@@ -14,7 +15,8 @@ const app = express();
 // app.use(cors());
 app.use(cors({
   origin: [
-    'https://waytopg.netlify.app',
+    'https://waytopg.netlify.app', // Production URL
+    'https://waytopgdev.netlify.app', // Development URL
     'http://localhost:5173' // Keep local development URL
   ],
   credentials: true,
@@ -23,6 +25,13 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/owner', ownerRoutes);
+app.use('/api/student', studentRoutes);
+app.use('/api/accommodations', accommodationRoutes);
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('Connected to MongoDB'))

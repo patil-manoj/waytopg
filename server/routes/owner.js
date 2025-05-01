@@ -87,4 +87,78 @@ router.delete('/accommodations/:id', auth, requireRole(['owner']), async (req, r
   }
 });
 
+router.put('/accommodations/:id', auth, requireRole(['owner']), upload.array('images', 10), async (req, res) => {
+  try {
+    // Find the accommodation and verify ownership
+    const accommodation = await Accommodation.findOne({ 
+      _id: req.params.id, 
+      owner: req.user._id 
+    });
+
+    if (!accommodation) {
+      return res.status(404).json({ message: 'Accommodation not found' });
+    }
+
+    // Handle image updates
+    const existingImages = JSON.parse(req.body.existingImages || '[]');
+    const imagesToDelete = accommodation.images.filter(
+      img => !existingImages.find(existImg => existImg.public_id === img.public_id)
+    );
+
+    // Delete removed images from Cloudinary
+    for (const image of imagesToDelete) {
+      try {
+        await deleteFromCloudinary(image.public_id);
+      } catch (error) {
+        console.error('Error deleting image:', error);
+        // Continue if one image fails to delete
+      }
+    }
+
+    // Upload new images
+    const uploadedImages = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        try {
+          const result = await uploadToCloudinary(file.buffer, 'waytopg_accommodations');
+          uploadedImages.push({
+            url: result.secure_url,
+            public_id: result.public_id
+          });
+        } catch (error) {
+          console.error('Error uploading image:', error);
+          // Continue with the rest of the images if one fails
+        }
+      }
+    }
+
+    // Parse arrays from form data
+    const amenities = JSON.parse(req.body.amenities || '[]');
+    const rules = JSON.parse(req.body.rules || '[]');
+
+    // Update the accommodation
+    const updatedAccommodation = await Accommodation.findByIdAndUpdate(
+      req.params.id,
+      {
+        name: req.body.name,
+        description: req.body.description,
+        address: req.body.address,
+        city: req.body.city,
+        price: req.body.price,
+        type: req.body.type,
+        roomType: req.body.roomType,
+        images: [...existingImages, ...uploadedImages],
+        amenities: amenities.filter(Boolean),
+        rules: rules.filter(Boolean)
+      },
+      { new: true }
+    );
+
+    res.json(updatedAccommodation);
+  } catch (error) {
+    console.error('Error updating accommodation:', error);
+    res.status(400).json({ message: 'Error updating accommodation' });
+  }
+});
+
 export default router;

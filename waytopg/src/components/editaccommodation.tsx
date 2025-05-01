@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Home, MapPin, IndianRupee, Upload, Plus, Minus, Loader, Wifi, Tv, Car, 
   Utensils, Dumbbell, Fan, Snowflake, Bath } from 'lucide-react';
@@ -24,11 +24,13 @@ const amenityOptions: AmenityOption[] = [
   { id: 'bathroom', label: 'Attached Bathroom', icon: Bath },
 ];
 
-const AddAccommodationPage: React.FC = () => {
+const EditAccommodationPage: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [images, setImages] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<Array<{ url: string; public_id: string }>>([]);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -41,6 +43,52 @@ const AddAccommodationPage: React.FC = () => {
     rules: [''],
   });
 
+  useEffect(() => {
+    const fetchAccommodation = async () => {
+      try {
+        setIsLoading(true);
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Authentication token not found');
+        }
+
+        const response = await fetch(`https://waytopg-backend.onrender.com/api/owner/accommodations/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch accommodation details');
+        }
+
+        const data = await response.json();
+        setFormData({
+          name: data.name || '',
+          description: data.description || '',
+          address: data.address || '',
+          city: data.city || '',
+          price: data.price?.toString() || '',
+          type: data.type || 'apartment',
+          roomType: data.roomType || 'single',
+          amenities: data.amenities || [],
+          rules: data.rules?.length ? data.rules : [''],
+        });
+        setExistingImages(data.images || []);
+      } catch (error) {
+        console.error('Error fetching accommodation:', error);
+        setError('Failed to load accommodation details');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchAccommodation();
+    }
+  }, [id]);
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const validFiles = files.filter(file => {
@@ -50,8 +98,8 @@ const AddAccommodationPage: React.FC = () => {
       }
       return isValid;
     });
-    
-    if (validFiles.length + images.length > 10) {
+
+    if (validFiles.length + images.length + existingImages.length > 10) {
       setError('Maximum 10 images allowed');
       return;
     }
@@ -61,6 +109,10 @@ const AddAccommodationPage: React.FC = () => {
 
   const handleRemoveImage = (index: number) => {
     setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveExistingImage = (index: number) => {
+    setExistingImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleAmenityToggle = (amenityId: string) => {
@@ -98,11 +150,11 @@ const AddAccommodationPage: React.FC = () => {
       setError('Please fill in all required fields');
       return false;
     }
-    if (images.length === 0) {
+    if (images.length + existingImages.length === 0) {
       setError('Please upload at least one image');
       return false;
     }
-    if (images.length > 10) {
+    if (images.length + existingImages.length > 10) {
       setError('Maximum 10 images allowed');
       return false;
     }
@@ -111,7 +163,7 @@ const AddAccommodationPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLoading) return; // Prevent multiple submissions
+    if (isLoading || !id) return;
     
     if (!validateForm()) return;
     
@@ -129,7 +181,6 @@ const AddAccommodationPage: React.FC = () => {
       // Append all form fields
       Object.entries(formData).forEach(([key, value]) => {
         if (Array.isArray(value)) {
-          // Filter out empty rules and stringify the array
           const cleanedArray = value.filter(item => item !== '');
           formDataToSend.append(key, JSON.stringify(cleanedArray));
         } else {
@@ -137,9 +188,11 @@ const AddAccommodationPage: React.FC = () => {
         }
       });
 
-      // Append images with unique names to prevent duplicates
+      // Append existing images
+      formDataToSend.append('existingImages', JSON.stringify(existingImages));
+
+      // Append new images
       images.forEach((image, index) => {
-        // Create a new filename with a timestamp to ensure uniqueness
         const timestamp = Date.now();
         const newFile = new File([image], `${timestamp}_${index}_${image.name}`, {
           type: image.type
@@ -147,8 +200,8 @@ const AddAccommodationPage: React.FC = () => {
         formDataToSend.append('images', newFile);
       });
 
-      const response = await fetch('https://waytopg-dev.onrender.com/api/owner/accommodations', {
-        method: 'POST',
+      const response = await fetch(`https://waytopg-backend.onrender.com/api/owner/accommodations/${id}`, {
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -157,14 +210,13 @@ const AddAccommodationPage: React.FC = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Failed to create accommodation (${response.status})`);
+        throw new Error(errorData.message || `Failed to update accommodation (${response.status})`);
       }
 
-      // Successfully created, navigate to dashboard
       navigate('/owner-dashboard');
     } catch (error) {
-      console.error('Error adding accommodation:', error);
-      setError('An error occurred while adding the accommodation');
+      console.error('Error updating accommodation:', error);
+      setError('An error occurred while updating the accommodation');
     } finally {
       setIsLoading(false);
     }
@@ -180,7 +232,7 @@ const AddAccommodationPage: React.FC = () => {
           transition={{ duration: 0.5 }}
           className="max-w-4xl mx-auto"
         >
-          <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">Add New Accommodation</h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">Edit Accommodation</h1>
           
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6" role="alert">
@@ -400,6 +452,32 @@ const AddAccommodationPage: React.FC = () => {
             <div className="bg-white p-6 rounded-xl shadow-md">
               <h2 className="text-xl font-semibold text-gray-800 mb-6">Images</h2>
               
+              {/* Existing Images */}
+              {existingImages.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium text-gray-700 mb-4">Current Images</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {existingImages.map((image, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={image.url}
+                          alt={`Current ${index + 1}`}
+                          className="h-24 w-full object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveExistingImage(index)}
+                          className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Minus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* New Images Upload */}
               <div className="space-y-4">
                 <div className="flex justify-center px-6 pt-5 pb-6 border-2 border-dashed border-gray-300 rounded-lg">
                   <div className="space-y-1 text-center">
@@ -421,6 +499,7 @@ const AddAccommodationPage: React.FC = () => {
                   </div>
                 </div>
 
+                {/* New Images Preview */}
                 {images.length > 0 && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                     {images.map((image, index) => (
@@ -456,10 +535,10 @@ const AddAccommodationPage: React.FC = () => {
                 {isLoading ? (
                   <>
                     <Loader className="animate-spin -ml-1 mr-3 h-5 w-5" />
-                    Adding...
+                    Updating...
                   </>
                 ) : (
-                  'Add Accommodation'
+                  'Update Accommodation'
                 )}
               </Button>
             </div>
@@ -471,4 +550,4 @@ const AddAccommodationPage: React.FC = () => {
   );
 };
 
-export default AddAccommodationPage;
+export default EditAccommodationPage;
