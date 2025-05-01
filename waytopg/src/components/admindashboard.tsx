@@ -61,7 +61,7 @@ const AdminDashboard: React.FC = () => {
         return;
       }
 
-      const response = await fetch('https://waytopg-dev.onrender.com/api/admin/accommodations', {
+      const response = await fetch('https://waytopg-backend.onrender.com/api/admin/accommodations', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -94,7 +94,7 @@ const AdminDashboard: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://waytopg-dev.onrender.com/api/admin/accommodations/${accommodationId}`, {
+      const response = await fetch(`https://waytopg-backend.onrender.com/api/admin/accommodations/${accommodationId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -138,13 +138,13 @@ const AdminDashboard: React.FC = () => {
       
       // Fetch users and stats in parallel
       const [usersResponse, statsResponse] = await Promise.all([
-        fetch('https://waytopg-dev.onrender.com/api/admin/users', {
+        fetch('https://waytopg-backend.onrender.com/api/admin/users', {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         }),
-        fetch('https://waytopg-dev.onrender.com/api/admin/stats', {
+        fetch('https://waytopg-backend.onrender.com/api/admin/stats', {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -279,19 +279,6 @@ const AdminDashboard: React.FC = () => {
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-bold text-gray-800">Admin Dashboard</h2>
-          <Button
-            variant="secondary"
-            size="small"
-            onClick={() => fetchDashboardData()}
-            disabled={loading}
-          >
-            {loading ? 'Refreshing...' : 'Refresh Dashboard'}
-          </Button>
-        </div>
-        
-        {/* Header with Refresh */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold text-gray-800">Dashboard Overview</h2>
           <button
             onClick={handleRefresh}
             disabled={loading || isRefreshing}
@@ -303,6 +290,8 @@ const AdminDashboard: React.FC = () => {
             {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </button>
         </div>
+
+        <h3 className="text-2xl font-semibold text-gray-800 mb-6">Dashboard Overview</h3>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
