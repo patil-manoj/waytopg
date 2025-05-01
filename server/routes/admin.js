@@ -58,6 +58,19 @@ router.post('/approve-owner/:id', auth, requireRole(['admin']), async (req, res)
   }
 });
 
+// Get all accommodations
+router.get('/accommodations', auth, requireRole(['admin']), async (req, res) => {
+  try {
+    const accommodations = await Accommodation.find()
+      .populate('owner', 'name email')
+      .sort({ createdAt: -1 });
+    res.json({ accommodations });
+  } catch (error) {
+    console.error('Error fetching accommodations:', error);
+    res.status(500).json({ message: 'Error fetching accommodations' });
+  }
+});
+
 router.delete('/users/:id', auth, requireRole(['admin']), async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
