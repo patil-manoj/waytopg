@@ -147,7 +147,7 @@ const AddAccommodationPage: React.FC = () => {
         formDataToSend.append('images', newFile);
       });
 
-      const response = await fetch('https://waytopg-backend.onrender.com/api/owner/accommodations', {
+      const response = await fetch('https://waytopg-dev.onrender.com/api/owner/accommodations', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

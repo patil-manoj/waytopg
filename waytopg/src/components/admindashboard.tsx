@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+// import { Link } from 'react-router-dom';
 // import Header from '../components/Header';
 import Footer from './Footer';
 import Button from './Button';
@@ -43,10 +43,10 @@ const AdminDashboard: React.FC = () => {
       
       // Fetch users and stats in parallel
       const [usersResponse, statsResponse] = await Promise.all([
-        fetch('https://waytopg-backend.onrender.com/api/admin/users', {
+        fetch('https://waytopg-dev.onrender.com/api/admin/users', {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        fetch('https://waytopg-backend.onrender.com/api/admin/stats', {
+        fetch('https://waytopg-dev.onrender.com/api/admin/stats', {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
@@ -73,7 +73,7 @@ const AdminDashboard: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://waytopg-backend.onrender.com/api/admin/approve-owner/${userId}`, {
+      const response = await fetch(`https://waytopg-dev.onrender.com/api/admin/approve-owner/${userId}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -106,7 +106,7 @@ const AdminDashboard: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://waytopg-backend.onrender.com/api/admin/users/${userId}`, {
+      const response = await fetch(`https://waytopg-dev.onrender.com/api/admin/users/${userId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
