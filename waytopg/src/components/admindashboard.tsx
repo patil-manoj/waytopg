@@ -43,6 +43,7 @@ const AdminDashboard: React.FC = () => {
     type: string;
     owner: { name: string; email: string };
   }>>([]);
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -92,30 +93,36 @@ const AdminDashboard: React.FC = () => {
     if (!window.confirm('Are you sure you want to delete this accommodation?')) return;
     
     try {
-      setLoading(true);
+      setDeletingIds(prev => new Set(prev).add(accommodationId));
       const token = localStorage.getItem('token');
       const response = await fetch(`https://waytopg-dev.onrender.com/api/admin/accommodations/${accommodationId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
 
       if (response.ok) {
-        setAccommodations(prevAccommodations => 
-          prevAccommodations.filter(acc => acc._id !== accommodationId)
-        );
-        setStats(prev => ({
-          ...prev,
-          totalAccommodations: prev.totalAccommodations - 1
-        }));
+        setAccommodations(prev => prev.filter(acc => acc._id !== accommodationId));
       } else {
-        throw new Error('Failed to delete accommodation');
+        const errorData = await response.json();
+        setError(errorData.message || 'Failed to delete accommodation');
       }
     } catch (error) {
       console.error('Error deleting accommodation:', error);
-      setError('Failed to delete accommodation');
+      setError('An error occurred while deleting the accommodation');
     } finally {
-      setLoading(false);
+      setDeletingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(accommodationId);
+        return newSet;
+      });
     }
+  };
+
+  const handleEditAccommodation = (_id: string) => {
+    window.location.href = `/edit-accommodation/${_id}`;
   };
 
   const fetchDashboardData = async () => {
@@ -460,9 +467,7 @@ const AdminDashboard: React.FC = () => {
                           <Button
                             variant="primary"
                             size="small"
-                            onClick={() => {
-                              window.location.href = `/accommodation/${accommodation._id}/edit`;
-                            }}
+                            onClick={() => handleEditAccommodation(accommodation._id)}
                             className="inline-flex items-center px-3 py-1.5 text-xs"
                           >
                             Edit
@@ -472,8 +477,9 @@ const AdminDashboard: React.FC = () => {
                             size="small"
                             onClick={() => handleDeleteAccommodation(accommodation._id)}
                             className="inline-flex items-center px-3 py-1.5 text-xs"
+                            disabled={deletingIds.has(accommodation._id)}
                           >
-                            Delete
+                            {deletingIds.has(accommodation._id) ? 'Deleting...' : 'Delete'}
                           </Button>
                         </td>
                       </tr>

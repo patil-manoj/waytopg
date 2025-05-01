@@ -14,6 +14,7 @@ const AccommodationDetailPage = lazy(() => import("./components/accommodationdet
 const AboutPage = lazy(() => import("./components/about"));
 const AddAccommodationPage = lazy(() => import("./components/addaccommodation"));
 const ProtectedRoute = lazy(() => import("./components/ProtectedRoute"));
+const EditAccommodationPage = lazy(() => import("./components/editaccommodation"));
 const NotFoundPage = lazy(() => import("./components/NotFound"));
 
 function App() {
@@ -60,6 +61,14 @@ function App() {
                   <Route path="accommodations" element={<AccommodationListPage />} />
                   <Route path="accommodation/:id" element={<AccommodationDetailPage />} />
                   <Route path="about" element={<AboutPage />} />
+                  <Route
+                    path="edit-accommodation/:id"
+                    element={
+                      <ProtectedRoute allowedRoles={["owner"]}>
+                        <EditAccommodationPage />
+                      </ProtectedRoute>
+                    }
+                  />
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </Suspense>

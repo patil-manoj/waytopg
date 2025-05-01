@@ -182,7 +182,13 @@ const OwnerDashboard: React.FC = () => {
                     <td className="py-2 px-4">{accommodation.address}</td>
                     <td className="py-2 px-4">${accommodation.price}/month</td>
                     <td className="py-2 px-4">
-                      <Button variant="secondary" size="small">Edit</Button>
+                      <Button 
+                        variant="secondary" 
+                        size="small"
+                        onClick={() => window.location.href = `/edit-accommodation/${accommodation._id}`}
+                      >
+                        Edit
+                      </Button>
                       <Button 
                         variant="secondary" 
                         size="small" 
