@@ -32,14 +32,74 @@ const AdminDashboard: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState<'users' | 'analytics'>('users');
+  const [selectedTab, setSelectedTab] = useState<'users' | 'analytics' | 'accommodations'>('users');
   const [filterRole, setFilterRole] = useState<'all' | 'owner' | 'student'>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [accommodations, setAccommodations] = useState<Array<{
+    _id: string;
+    name: string;
+    address: string;
+    price: number;
+    type: string;
+    owner: { name: string; email: string };
+  }>>([]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await fetchDashboardData();
+    await Promise.all([fetchDashboardData(), fetchAccommodations()]);
     setIsRefreshing(false);
+  };
+
+  const fetchAccommodations = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('https://waytopg-dev.onrender.com/api/admin/accommodations', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch accommodations');
+      }
+
+      const data = await response.json();
+      setAccommodations(data.accommodations || []);
+    } catch (error) {
+      console.error('Error fetching accommodations:', error);
+      setError('Failed to load accommodations');
+    }
+  };
+
+  const handleDeleteAccommodation = async (accommodationId: string) => {
+    if (!window.confirm('Are you sure you want to delete this accommodation?')) return;
+    
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`https://waytopg-dev.onrender.com/api/admin/accommodations/${accommodationId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        setAccommodations(prevAccommodations => 
+          prevAccommodations.filter(acc => acc._id !== accommodationId)
+        );
+        setStats(prev => ({
+          ...prev,
+          totalAccommodations: prev.totalAccommodations - 1
+        }));
+      } else {
+        throw new Error('Failed to delete accommodation');
+      }
+    } catch (error) {
+      console.error('Error deleting accommodation:', error);
+      setError('Failed to delete accommodation');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchDashboardData = async () => {
@@ -192,7 +252,10 @@ const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+    if (selectedTab === 'accommodations') {
+      fetchAccommodations();
+    }
+  }, [selectedTab]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-blue-50 to-white flex flex-col">
@@ -241,7 +304,13 @@ const AdminDashboard: React.FC = () => {
             </div>
             <p className="text-2xl font-bold text-orange-500">{stats.pendingApprovals}</p>
           </div>
-          <div className="bg-white p-6 rounded-xl shadow-md">
+          <div 
+            className="bg-white p-6 rounded-xl shadow-md cursor-pointer transition-all hover:shadow-lg"
+            onClick={() => {
+              setSelectedTab('accommodations');
+              fetchAccommodations();
+            }}
+          >
             <div className="flex items-center gap-3 mb-2">
               <Home className="w-5 h-5 text-green-600" />
               <h4 className="text-gray-500 text-sm">Total Accommodations</h4>
@@ -270,6 +339,16 @@ const AdminDashboard: React.FC = () => {
             User Management
           </button>
           <button
+            onClick={() => setSelectedTab('accommodations')}
+            className={`px-4 py-2 rounded-md ${
+              selectedTab === 'accommodations'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Accommodations
+          </button>
+          <button
             onClick={() => setSelectedTab('analytics')}
             className={`px-4 py-2 rounded-md ${
               selectedTab === 'analytics'
@@ -290,6 +369,64 @@ const AdminDashboard: React.FC = () => {
         {loading ? (
           <div className="flex justify-center items-center h-32">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        ) : selectedTab === 'accommodations' ? (
+          <div className="bg-white p-6 rounded-xl shadow-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Accommodation Management</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="py-2 px-4 text-left">Name</th>
+                    <th className="py-2 px-4 text-left">Address</th>
+                    <th className="py-2 px-4 text-left">Type</th>
+                    <th className="py-2 px-4 text-left">Price</th>
+                    <th className="py-2 px-4 text-left">Owner</th>
+                    <th className="py-2 px-4 text-left">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {accommodations.map((accommodation) => (
+                    <tr key={accommodation._id} className="border-b">
+                      <td className="py-2 px-4">{accommodation.name}</td>
+                      <td className="py-2 px-4">{accommodation.address}</td>
+                      <td className="py-2 px-4">
+                        <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">
+                          {accommodation.type}
+                        </span>
+                      </td>
+                      <td className="py-2 px-4">${accommodation.price}/month</td>
+                      <td className="py-2 px-4">
+                        <div>
+                          <div className="font-medium">{accommodation.owner.name}</div>
+                          <div className="text-sm text-gray-500">{accommodation.owner.email}</div>
+                        </div>
+                      </td>
+                      <td className="py-2 px-4 space-x-2">
+                        <Button
+                          variant="primary"
+                          size="small"
+                          onClick={() => {
+                            window.location.href = `/accommodation/${accommodation._id}/edit`;
+                          }}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="small"
+                          onClick={() => handleDeleteAccommodation(accommodation._id)}
+                        >
+                          Delete
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         ) : selectedTab === 'users' ? (
           <div className="bg-white p-6 rounded-xl shadow-md">
