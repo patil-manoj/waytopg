@@ -5,7 +5,9 @@ const bookingSchema = new mongoose.Schema({
   student: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   checkIn: { type: Date, required: true },
   checkOut: { type: Date, required: true },
-  status: { type: String, enum: ['pending', 'confirmed', 'cancelled'], default: 'pending' },
+  status: { type: String, enum: ['pending', 'confirmed', 'cancelled'], default: 'confirmed' },
+}, {
+  timestamps: true
 });
 
 export default mongoose.model('Booking', bookingSchema);

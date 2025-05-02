@@ -73,7 +73,14 @@ function App() {
                     }
                   />
                   <Route path="accommodations" element={<AccommodationListPage />} />
-                  <Route path="accommodation/:id" element={<AccommodationDetailPage />} />
+                  <Route
+                    path="accommodation/:id"
+                    element={
+                      <ProtectedRoute allowedRoles={["student", "owner", "admin"]}>
+                        <AccommodationDetailPage />
+                      </ProtectedRoute>
+                    }
+                  />
                   <Route path="about" element={<AboutPage />} />
                   <Route
                     path="edit-accommodation/:id"
