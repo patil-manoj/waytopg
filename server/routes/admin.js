@@ -255,13 +255,18 @@ router.delete('/accommodations/:id', auth, requireRole(['admin']), async (req, r
 
     // Delete images from Cloudinary
     if (accommodation.images && accommodation.images.length > 0) {
-      const deletePromises = accommodation.images.map(image => 
-        deleteFromCloudinary(image.public_id)
-      );
+      const deletePromises = accommodation.images.map(async (image) => {
+        try {
+          await deleteFromCloudinary(image.public_id);
+        } catch (error) {
+          console.error(`Error deleting image ${image.public_id} from Cloudinary:`, error);
+          // Continue with other images even if one fails
+        }
+      });
       await Promise.all(deletePromises);
     }
 
-    // Delete the accommodation
+    // Delete the accommodation from database
     await Accommodation.findByIdAndDelete(req.params.id);
     res.json({ message: 'Accommodation deleted successfully' });
   } catch (error) {

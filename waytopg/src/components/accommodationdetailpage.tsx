@@ -33,6 +33,7 @@ const AccommodationDetailPage: React.FC = () => {
   const [checkOutDate, setCheckOutDate] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAccommodation = async () => {
@@ -130,20 +131,70 @@ const AccommodationDetailPage: React.FC = () => {
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           {/* Image Gallery */}
-          <div className="relative h-[400px] overflow-hidden">
-            {accommodation.images && accommodation.images.length > 0 ? (
-              <img 
-                src={accommodation.images[0].url} 
-                alt={accommodation.name} 
-                className="w-full h-[400px] object-cover"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = '/placeholder.svg?height=400&width=800';
-                }}
-              />
-            ) : (
-              <div className="w-full h-[400px] bg-gray-200 flex items-center justify-center">
-                <p className="text-gray-500">No image available</p>
+          <div className="relative">
+            {/* Main Image Display */}
+            <div className="h-[500px] overflow-hidden">
+              {accommodation.images && accommodation.images.length > 0 ? (
+                <img 
+                  src={selectedImage || accommodation.images[0].url} 
+                  alt={accommodation.name} 
+                  className="w-full h-[500px] object-cover cursor-pointer transition-transform duration-300 hover:scale-105"
+                  onClick={() => setSelectedImage(selectedImage ? null : accommodation.images[0].url)}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder.svg?height=500&width=800';
+                  }}
+                />
+              ) : (
+                <div className="w-full h-[500px] bg-gray-200 flex items-center justify-center">
+                  <p className="text-gray-500">No image available</p>
+                </div>
+              )}
+            </div>
+
+            {/* Thumbnail Gallery */}
+            {accommodation.images && accommodation.images.length > 1 && (
+              <div className="absolute bottom-4 left-0 right-0">
+                <div className="flex gap-2 justify-center px-4 overflow-x-auto py-2">
+                  {accommodation.images.map((image, index) => (
+                    <div
+                      key={image.public_id}
+                      className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden cursor-pointer 
+                        ${selectedImage === image.url ? 'ring-2 ring-blue-500' : 'ring-1 ring-white/50'}`}
+                      onClick={() => setSelectedImage(image.url)}
+                    >
+                      <img
+                        src={image.url}
+                        alt={`${accommodation.name} - Image ${index + 1}`}
+                        className="w-full h-full object-cover hover:opacity-90 transition-opacity"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Fullscreen Image Modal */}
+            {selectedImage && (
+              <div 
+                className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+                onClick={() => setSelectedImage(null)}
+              >
+                <div className="relative max-w-7xl w-full">
+                  <img
+                    src={selectedImage}
+                    alt={accommodation.name}
+                    className="w-full h-auto max-h-[90vh] object-contain"
+                  />
+                  <button
+                    className="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2 hover:bg-black/75"
+                    onClick={() => setSelectedImage(null)}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             )}
           </div>

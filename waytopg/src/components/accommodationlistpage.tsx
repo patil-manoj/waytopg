@@ -31,7 +31,7 @@ const AccommodationListPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
   const [filteredAccommodations, setFilteredAccommodations] = useState<Accommodation[]>([]);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('');
   
