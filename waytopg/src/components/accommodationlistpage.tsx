@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import Footer from '../components/Footer';
 import Button from '../components/Button';
 import { Search, MapPin, Star, RefreshCw, Loader } from 'lucide-react';
 import Navbar from './navbar';
+import AuthPopup from './AuthPopup';
 
 interface AccommodationResponse {
   _id: string;
@@ -34,6 +35,7 @@ const AccommodationListPage: React.FC = () => {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('');
+  const [showAuthPopup, setShowAuthPopup] = useState(false);
   
   // Get search query from URL parameters when component mounts
   useEffect(() => {
@@ -245,11 +247,21 @@ const AccommodationListPage: React.FC = () => {
                         <span className="text-2xl font-bold text-blue-600">${accommodation.price}</span>
                         <span className="text-gray-500 text-sm">/month</span>
                       </div>
-                      <Link to={`/accommodation/${accommodation.id}`}>
-                        <Button variant="primary" size="small" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors duration-200">
-                          View Details
-                        </Button>
-                      </Link>
+                      <Button 
+                        variant="primary" 
+                        size="small" 
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors duration-200"
+                        onClick={() => {
+                          const token = localStorage.getItem('token');
+                          if (!token) {
+                            setShowAuthPopup(true);
+                          } else {
+                            window.location.href = `/accommodation/${accommodation.id}`;
+                          }
+                        }}
+                      >
+                        View Details
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -259,6 +271,7 @@ const AccommodationListPage: React.FC = () => {
         )}
       </main>
       <Footer />
+      <AuthPopup isOpen={showAuthPopup} onClose={() => setShowAuthPopup(false)} />
     </div>
   );
 };
