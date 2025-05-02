@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { RefreshCw, Users, Home, BookOpen } from 'lucide-react';
+import { RefreshCw, Users, Home, BookOpen, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Footer from './Footer';
 import Button from './Button';
 import Navbar from './navbar';
@@ -386,16 +387,28 @@ const AdminDashboard: React.FC = () => {
           <div className="bg-white p-6 rounded-xl shadow-md">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-semibold text-gray-800">Accommodation Management</h3>
-              <Button
-                variant="primary"
-                size="small"
-                onClick={() => fetchAccommodations()}
-                disabled={loading}
-                className="flex items-center gap-2"
-              >
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                {loading ? 'Refreshing...' : 'Refresh'}
-              </Button>
+              <div className="flex gap-4">
+                <Link to="/add-accommodation">
+                  <Button
+                    variant="primary"
+                    size="small"
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add New Accommodation
+                  </Button>
+                </Link>
+                <Button
+                  variant="secondary"
+                  size="small"
+                  onClick={() => fetchAccommodations()}
+                  disabled={loading}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                  {loading ? 'Refreshing...' : 'Refresh'}
+                </Button>
+              </div>
             </div>
 
             {error ? (

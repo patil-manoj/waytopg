@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Home, MapPin, IndianRupee, Upload, Plus, Minus, Loader, Wifi, Tv, Car, 
-  Utensils, Dumbbell, Fan, Snowflake, Bath } from 'lucide-react';
+  Utensils, Dumbbell, Fan, Snowflake, Bath, Wind, ShieldCheck, BookOpen, Package,
+  Zap, ArrowUpDown, Video, Info, CreditCard, Map } from 'lucide-react';
 import Navbar from './navbar';
 import Footer from './Footer';
 import Button from './Button';
@@ -22,6 +23,26 @@ const amenityOptions: AmenityOption[] = [
   { id: 'ac', label: 'Air Conditioning', icon: Snowflake },
   { id: 'fan', label: 'Fan', icon: Fan },
   { id: 'bathroom', label: 'Attached Bathroom', icon: Bath },
+  { id: 'laundry', label: 'Laundry', icon: Wind },
+  { id: 'security', label: 'Security', icon: ShieldCheck },
+  { id: 'study-table', label: 'Study Table', icon: BookOpen },
+  { id: 'cupboard', label: 'Cupboard', icon: Package },
+  { id: 'balcony', label: 'Balcony', icon: Home },
+  { id: 'power-backup', label: 'Power Backup', icon: Zap },
+  { id: 'elevator', label: 'Elevator', icon: ArrowUpDown },
+  { id: 'cctv', label: 'CCTV', icon: Video },
+];
+
+const furnishingOptions = [
+  { value: 'furnished', label: 'Fully Furnished' },
+  { value: 'semi-furnished', label: 'Semi Furnished' },
+  { value: 'unfurnished', label: 'Unfurnished' },
+];
+
+const genderOptions = [
+  { value: 'male', label: 'Male Only' },
+  { value: 'female', label: 'Female Only' },
+  { value: 'any', label: 'Any' },
 ];
 
 const AddAccommodationPage: React.FC = () => {
@@ -29,6 +50,46 @@ const AddAccommodationPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [images, setImages] = useState<File[]>([]);
+  interface Owner {
+    _id: string;
+    name: string;
+    email: string;
+    role: string;
+    isApproved: boolean;
+  }
+  const [owners, setOwners] = useState<Owner[]>([]);
+  const [isAdmin] = useState(() => localStorage.getItem('userRole') === 'admin');
+
+  // Fetch owners if admin
+  useEffect(() => {
+    const fetchOwners = async () => {
+      if (!isAdmin) return;
+      
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('https://waytopg-backend.onrender.com/api/admin/users', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch owners');
+        }
+
+        const data = await response.json();
+        const { users } = data;
+        setOwners(users.filter((user: Owner) => user.role === 'owner' && user.isApproved));
+      } catch (error) {
+        console.error('Error fetching owners:', error);
+        setError('Failed to load owners list');
+      }
+    };
+
+    fetchOwners();
+  }, [isAdmin]);
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -39,6 +100,19 @@ const AddAccommodationPage: React.FC = () => {
     roomType: 'single',
     amenities: [] as string[],
     rules: [''],
+    mapLink: '',
+    capacity: '',
+    status: 'available',
+    gender: 'any',
+    furnishing: 'furnished',
+    securityDeposit: '',
+    foodAvailable: false,
+    foodPrice: '',
+    maintenanceCharges: '',
+    electricityIncluded: false,
+    waterIncluded: false,
+    noticePeriod: '30',
+    ownerId: '' // Only used by admin
   });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,10 +168,30 @@ const AddAccommodationPage: React.FC = () => {
   };
 
   const validateForm = () => {
-    if (!formData.name || !formData.address || !formData.price) {
-      setError('Please fill in all required fields');
+    // Required fields
+    const requiredFields = {
+      name: 'Property Name',
+      address: 'Address',
+      city: 'City',
+      price: 'Rent Amount',
+      capacity: 'Room Capacity',
+      securityDeposit: 'Security Deposit'
+    };
+
+    // Add ownerId validation for admin
+    if (isAdmin && !formData.ownerId) {
+      setError('Please select a property owner');
       return false;
     }
+
+    for (const [field, label] of Object.entries(requiredFields)) {
+      if (!formData[field as keyof typeof formData]) {
+        setError(`Please enter ${label}`);
+        return false;
+      }
+    }
+
+    // Validate images
     if (images.length === 0) {
       setError('Please upload at least one image');
       return false;
@@ -106,12 +200,35 @@ const AddAccommodationPage: React.FC = () => {
       setError('Maximum 10 images allowed');
       return false;
     }
+
+    // Validate numeric fields
+    const numericFields = ['price', 'capacity', 'securityDeposit', 'maintenanceCharges', 'foodPrice', 'noticePeriod'];
+    for (const field of numericFields) {
+      const value = parseFloat(formData[field as keyof typeof formData] as string);
+      if (formData[field as keyof typeof formData] && (isNaN(value) || value < 0)) {
+        setError(`Please enter a valid number for ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
+        return false;
+      }
+    }
+
+    // Validate map link format if provided
+    if (formData.mapLink && !formData.mapLink.startsWith('https://')) {
+      setError('Please enter a valid Google Maps link');
+      return false;
+    }
+
+    // Validate food price if food is available
+    if (formData.foodAvailable && !formData.foodPrice) {
+      setError('Please enter food charges');
+      return false;
+    }
+
     return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLoading) return; // Prevent multiple submissions
+    if (isLoading) return;
     
     if (!validateForm()) return;
     
@@ -126,20 +243,31 @@ const AddAccommodationPage: React.FC = () => {
 
       const formDataToSend = new FormData();
       
+      // Convert form data to the correct types before sending
+      const processedFormData = {
+        ...formData,
+        price: parseFloat(formData.price),
+        capacity: parseInt(formData.capacity),
+        securityDeposit: parseFloat(formData.securityDeposit),
+        maintenanceCharges: formData.maintenanceCharges ? parseFloat(formData.maintenanceCharges) : 0,
+        foodPrice: formData.foodPrice ? parseFloat(formData.foodPrice) : 0,
+        noticePeriod: parseInt(formData.noticePeriod),
+        rules: formData.rules.filter(item => item !== ''),
+      };
+
       // Append all form fields
-      Object.entries(formData).forEach(([key, value]) => {
+      Object.entries(processedFormData).forEach(([key, value]) => {
         if (Array.isArray(value)) {
-          // Filter out empty rules and stringify the array
-          const cleanedArray = value.filter(item => item !== '');
-          formDataToSend.append(key, JSON.stringify(cleanedArray));
-        } else {
+          formDataToSend.append(key, JSON.stringify(value));
+        } else if (typeof value === 'boolean') {
           formDataToSend.append(key, value.toString());
+        } else {
+          formDataToSend.append(key, value?.toString() || '');
         }
       });
 
       // Append images with unique names to prevent duplicates
       images.forEach((image, index) => {
-        // Create a new filename with a timestamp to ensure uniqueness
         const timestamp = Date.now();
         const newFile = new File([image], `${timestamp}_${index}_${image.name}`, {
           type: image.type
@@ -147,7 +275,12 @@ const AddAccommodationPage: React.FC = () => {
         formDataToSend.append('images', newFile);
       });
 
-      const response = await fetch('https://waytopg-backend.onrender.com/api/owner/accommodations', {
+      // Use different endpoints for admin and owner
+      const endpoint = isAdmin ? 
+        'https://waytopg-backend.onrender.com/api/admin/accommodations' :
+        'https://waytopg-backend.onrender.com/api/owner/accommodations';
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -160,8 +293,8 @@ const AddAccommodationPage: React.FC = () => {
         throw new Error(errorData.message || `Failed to create accommodation (${response.status})`);
       }
 
-      // Successfully created, navigate to dashboard
-      navigate('/owner-dashboard');
+      // Navigate based on role
+      navigate(isAdmin ? '/admin-dashboard' : '/owner-dashboard');
     } catch (error) {
       console.error('Error adding accommodation:', error);
       setError('An error occurred while adding the accommodation');
@@ -211,6 +344,28 @@ const AddAccommodationPage: React.FC = () => {
                     placeholder="e.g., Sunny Student Villa"
                   />
                 </div>
+
+                {isAdmin && (
+                  <div>
+                    <label htmlFor="ownerId" className="block text-sm font-medium text-gray-700 mb-1">
+                      Property Owner
+                    </label>
+                    <select
+                      id="ownerId"
+                      value={formData.ownerId}
+                      onChange={(e) => setFormData(prev => ({ ...prev, ownerId: e.target.value }))}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    >
+                      <option value="">Select Owner</option>
+                      {owners.map((owner) => (
+                        <option key={owner._id} value={owner._id}>
+                          {owner.name} ({owner.email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div>
                   <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
@@ -441,6 +596,197 @@ const AddAccommodationPage: React.FC = () => {
                     ))}
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Additional Details */}
+            <div className="bg-white p-6 rounded-xl shadow-md space-y-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                <Info className="w-5 h-5 mr-2 text-green-600" />
+                Additional Details
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="capacity" className="block text-sm font-medium text-gray-700 mb-1">
+                    Room Capacity
+                  </label>
+                  <input
+                    type="number"
+                    id="capacity"
+                    value={formData.capacity}
+                    onChange={(e) => setFormData(prev => ({ ...prev, capacity: e.target.value }))}
+                    required
+                    min="1"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="e.g., 2"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
+                    Gender Preference
+                  </label>
+                  <select
+                    id="gender"
+                    value={formData.gender}
+                    onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  >
+                    {genderOptions.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="furnishing" className="block text-sm font-medium text-gray-700 mb-1">
+                    Furnishing Status
+                  </label>
+                  <select
+                    id="furnishing"
+                    value={formData.furnishing}
+                    onChange={(e) => setFormData(prev => ({ ...prev, furnishing: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  >
+                    {furnishingOptions.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="noticePeriod" className="block text-sm font-medium text-gray-700 mb-1">
+                    Notice Period (days)
+                  </label>
+                  <input
+                    type="number"
+                    id="noticePeriod"
+                    value={formData.noticePeriod}
+                    onChange={(e) => setFormData(prev => ({ ...prev, noticePeriod: e.target.value }))}
+                    min="0"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="e.g., 30"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Charges and Deposits */}
+            <div className="bg-white p-6 rounded-xl shadow-md space-y-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                <CreditCard className="w-5 h-5 mr-2 text-green-600" />
+                Charges and Deposits
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="securityDeposit" className="block text-sm font-medium text-gray-700 mb-1">
+                    Security Deposit (₹)
+                  </label>
+                  <input
+                    type="number"
+                    id="securityDeposit"
+                    value={formData.securityDeposit}
+                    onChange={(e) => setFormData(prev => ({ ...prev, securityDeposit: e.target.value }))}
+                    required
+                    min="0"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="e.g., 10000"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="maintenanceCharges" className="block text-sm font-medium text-gray-700 mb-1">
+                    Maintenance Charges (₹/month)
+                  </label>
+                  <input
+                    type="number"
+                    id="maintenanceCharges"
+                    value={formData.maintenanceCharges}
+                    onChange={(e) => setFormData(prev => ({ ...prev, maintenanceCharges: e.target.value }))}
+                    min="0"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="e.g., 1000"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <label className="inline-flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.foodAvailable}
+                        onChange={(e) => setFormData(prev => ({ ...prev, foodAvailable: e.target.checked }))}
+                        className="rounded border-gray-300 text-green-600 shadow-sm focus:border-green-300 focus:ring focus:ring-green-200 focus:ring-opacity-50"
+                      />
+                      <span className="ml-2">Food Available</span>
+                    </label>
+                  </div>
+                  {formData.foodAvailable && (
+                    <div className="flex-1">
+                      <input
+                        type="number"
+                        value={formData.foodPrice}
+                        onChange={(e) => setFormData(prev => ({ ...prev, foodPrice: e.target.value }))}
+                        placeholder="Monthly food charges"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <label className="inline-flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.electricityIncluded}
+                        onChange={(e) => setFormData(prev => ({ ...prev, electricityIncluded: e.target.checked }))}
+                        className="rounded border-gray-300 text-green-600 shadow-sm focus:border-green-300 focus:ring focus:ring-green-200 focus:ring-opacity-50"
+                      />
+                      <span className="ml-2">Electricity Included in Rent</span>
+                    </label>
+                  </div>
+                  <div className="flex-1">
+                    <label className="inline-flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.waterIncluded}
+                        onChange={(e) => setFormData(prev => ({ ...prev, waterIncluded: e.target.checked }))}
+                        className="rounded border-gray-300 text-green-600 shadow-sm focus:border-green-300 focus:ring focus:ring-green-200 focus:ring-opacity-50"
+                      />
+                      <span className="ml-2">Water Included in Rent</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Location Details */}
+            <div className="bg-white p-6 rounded-xl shadow-md">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                <Map className="w-5 h-5 mr-2 text-green-600" />
+                Location Details
+              </h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="mapLink" className="block text-sm font-medium text-gray-700 mb-1">
+                    Google Maps Link
+                  </label>
+                  <input
+                    type="url"
+                    id="mapLink"
+                    value={formData.mapLink}
+                    onChange={(e) => setFormData(prev => ({ ...prev, mapLink: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="e.g., https://goo.gl/maps/..."
+                  />
+                  <p className="mt-1 text-sm text-gray-500">Share your property's location on Google Maps</p>
+                </div>
               </div>
             </div>
 
