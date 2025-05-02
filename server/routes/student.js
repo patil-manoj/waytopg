@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import { auth, requireRole } from '../middleware/auth.js';
 import Booking from '../models/Booking.js';
 import Accommodation from '../models/Accommodation.js';
@@ -29,23 +30,34 @@ router.post('/book', auth, requireRole(['student']), async (req, res) => {
       return res.status(400).json({ message: 'Accommodation is not available for booking' });
     }
 
-    // Create the booking
-    const booking = new Booking({
-      accommodation: req.body.accommodation,
-      student: req.user._id,
-      checkIn: new Date(req.body.checkIn),
-      checkOut: new Date(req.body.checkOut)
-    });
+    // Start a session for transaction
+    const session = await mongoose.startSession();
+    let newBooking;
+    
+    try {
+      await session.withTransaction(async () => {
+        // Create the booking
+        const booking = new Booking({
+          accommodation: req.body.accommodation,
+          student: req.user._id,
+          checkIn: new Date(req.body.checkIn),
+          checkOut: new Date(req.body.checkOut),
+          status: 'confirmed'
+        });
 
-    // Save the booking
-    await booking.save();
+        // Save the booking
+        newBooking = await booking.save({ session });
 
-    // Update accommodation status
-    accommodation.status = 'booked';
-    await accommodation.save();
+        // Update accommodation status
+        accommodation.status = 'booked';
+        await accommodation.save({ session });
+      });
+    } finally {
+      await session.endSession();
+    }
 
     // Return the booking with populated accommodation details
-    const populatedBooking = await Booking.findById(booking._id)
+    const populatedBooking = await Booking.findById(newBooking._id)
       .populate('accommodation', 'name address images');
 
     res.status(201).json(populatedBooking);

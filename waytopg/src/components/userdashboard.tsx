@@ -23,39 +23,39 @@ const UserDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          navigate('/login');
-          return;
-        }
-
-        setLoading(true);
-        setError(null);
-        const response = await fetch('https://waytopg-dev.onrender.com/api/student/bookings', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch bookings');
-        }
-
-        const data = await response.json();
-        setBookings(data);
-      } catch (error) {
-        console.error('Error fetching bookings:', error);
-        setError('Failed to load bookings. Please try again later.');
-      } finally {
-        setLoading(false);
+  const fetchBookings = React.useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
       }
-    };
 
-    fetchBookings();
+      setLoading(true);
+      setError(null);
+      const response = await fetch('https://waytopg-dev.onrender.com/api/student/bookings', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch bookings');
+      }
+
+      const data = await response.json();
+      setBookings(data);
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      setError('Failed to load bookings. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
   }, [navigate]);
+
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
 
   const handleCancelBooking = async (bookingId: string) => {
     if (!window.confirm('Are you sure you want to cancel this booking?')) {
@@ -104,7 +104,16 @@ const UserDashboard: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-blue-50 to-white flex flex-col">
       <Navbar />
       <main className="flex-grow container mx-auto px-4 py-8">
-        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Student Dashboard</h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-3xl font-bold text-gray-800">Student Dashboard</h2>
+          <Button
+            onClick={fetchBookings}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+            disabled={loading}
+          >
+            {loading ? 'Refreshing...' : 'Refresh Bookings'}
+          </Button>
+        </div>
         
         {error ? (
           <div className="bg-red-50 p-4 rounded-lg text-red-600 text-center">
