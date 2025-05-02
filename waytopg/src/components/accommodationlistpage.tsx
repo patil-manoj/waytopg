@@ -50,7 +50,7 @@ const AccommodationListPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('https://waytopg-dev.onrender.com/api/accommodations', {
+      const response = await fetch('https://waytopg-backend.onrender.com/api/accommodations', {
         headers: {
           'Content-Type': 'application/json'
         }

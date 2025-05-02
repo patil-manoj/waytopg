@@ -48,7 +48,7 @@ const SignupPage: React.FC = () => {
     if (!validateForm()) return;
     setIsLoading(true);
     try {
-      const response = await fetch('https://waytopg-dev.onrender.com/api/auth/signup', {
+      const response = await fetch('https://waytopg-backend.onrender.com/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
