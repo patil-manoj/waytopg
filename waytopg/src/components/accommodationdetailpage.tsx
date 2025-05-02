@@ -39,7 +39,7 @@ const AccommodationDetailPage: React.FC = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch(`https://waytopg-backend.onrender.com/api/accommodations/${id}`);
+        const response = await fetch(`https://waytopg-dev.onrender.com/api/accommodations/${id}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch accommodation details');

@@ -29,26 +29,45 @@ router.post('/accommodations', auth, requireRole(['owner']), upload.array('image
     const amenities = JSON.parse(req.body.amenities || '[]');
     const rules = JSON.parse(req.body.rules || '[]');
     
-    // Create and save the accommodation
+    // Create the accommodation with all required fields
     const accommodation = new Accommodation({
       name: req.body.name,
       description: req.body.description,
       address: req.body.address,
       city: req.body.city,
-      price: req.body.price,
+      price: Number(req.body.price),
       type: req.body.type,
       roomType: req.body.roomType,
       owner: req.user._id,
       images: uploadedImages,
-      amenities: amenities.filter(Boolean), // Remove any empty values
-      rules: rules.filter(Boolean) // Remove any empty values
+      amenities: amenities.filter(Boolean),
+      rules: rules.filter(Boolean),
+      mapLink: req.body.mapLink,
+      capacity: Number(req.body.capacity),
+      status: req.body.status || 'available',
+      gender: req.body.gender,
+      furnishing: req.body.furnishing,
+      securityDeposit: Number(req.body.securityDeposit),
+      foodAvailable: req.body.foodAvailable === 'true',
+      foodPrice: req.body.foodPrice ? Number(req.body.foodPrice) : undefined,
+      maintenanceCharges: req.body.maintenanceCharges ? Number(req.body.maintenanceCharges) : 0,
+      electricityIncluded: req.body.electricityIncluded === 'true',
+      waterIncluded: req.body.waterIncluded === 'true',
+      noticePeriod: Number(req.body.noticePeriod) || 30
     });
     
     await accommodation.save();
     res.status(201).json(accommodation);
   } catch (error) {
     console.error('Error creating accommodation:', error);
-    res.status(400).json({ message: 'Error creating accommodation' });
+    if (error.name === 'ValidationError') {
+      // Mongoose validation error - return specific field errors
+      const errors = Object.values(error.errors).map(err => err.message);
+      res.status(400).json({ message: 'Validation error', errors });
+    } else {
+      // Other errors
+      res.status(400).json({ message: error.message || 'Error creating accommodation' });
+    }
   }
 });
 
@@ -136,7 +155,7 @@ router.put('/accommodations/:id', auth, requireRole(['owner']), upload.array('im
     const amenities = JSON.parse(req.body.amenities || '[]');
     const rules = JSON.parse(req.body.rules || '[]');
 
-    // Update the accommodation
+    // Update the accommodation with all fields
     const updatedAccommodation = await Accommodation.findByIdAndUpdate(
       req.params.id,
       {
@@ -144,12 +163,24 @@ router.put('/accommodations/:id', auth, requireRole(['owner']), upload.array('im
         description: req.body.description,
         address: req.body.address,
         city: req.body.city,
-        price: req.body.price,
+        price: Number(req.body.price),
         type: req.body.type,
         roomType: req.body.roomType,
         images: [...existingImages, ...uploadedImages],
         amenities: amenities.filter(Boolean),
-        rules: rules.filter(Boolean)
+        rules: rules.filter(Boolean),
+        mapLink: req.body.mapLink,
+        capacity: Number(req.body.capacity),
+        status: req.body.status || 'available',
+        gender: req.body.gender,
+        furnishing: req.body.furnishing,
+        securityDeposit: Number(req.body.securityDeposit),
+        foodAvailable: req.body.foodAvailable === 'true',
+        foodPrice: req.body.foodPrice ? Number(req.body.foodPrice) : undefined,
+        maintenanceCharges: req.body.maintenanceCharges ? Number(req.body.maintenanceCharges) : 0,
+        electricityIncluded: req.body.electricityIncluded === 'true',
+        waterIncluded: req.body.waterIncluded === 'true',
+        noticePeriod: Number(req.body.noticePeriod) || 30
       },
       { new: true }
     );
@@ -157,7 +188,12 @@ router.put('/accommodations/:id', auth, requireRole(['owner']), upload.array('im
     res.json(updatedAccommodation);
   } catch (error) {
     console.error('Error updating accommodation:', error);
-    res.status(400).json({ message: 'Error updating accommodation' });
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      res.status(400).json({ message: 'Validation error', errors });
+    } else {
+      res.status(400).json({ message: error.message || 'Error updating accommodation' });
+    }
   }
 });
 
