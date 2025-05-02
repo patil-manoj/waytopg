@@ -4,6 +4,7 @@ import User from '../models/user.js';
 import Accommodation from '../models/Accommodation.js';
 import Booking from '../models/Booking.js';
 import { deleteFromCloudinary } from '../utils/cloudinary.js';
+import upload from '../middleware/upload.js';
 
 const router = express.Router();
 
