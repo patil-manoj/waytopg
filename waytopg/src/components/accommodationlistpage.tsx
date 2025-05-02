@@ -165,8 +165,8 @@ const AccommodationListPage: React.FC = () => {
               <input
                 type="range"
                 min="0"
-                max="1000"
-                step="50"
+                max="100000"
+                step="500"
                 value={priceRange[1]}
                 onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
                 className="flex-1 min-w-0 h-2 bg-gradient-to-r from-blue-200 to-blue-600 rounded-full appearance-none cursor-pointer"
@@ -176,7 +176,7 @@ const AccommodationListPage: React.FC = () => {
                 }}
               />
               <span className="flex-none whitespace-nowrap text-sm font-semibold text-blue-600">
-                ${priceRange[1]}<span className="text-gray-500 font-normal">/mo</span>
+                ₹{priceRange[1]}<span className="text-gray-500 font-normal">/mo</span>
               </span>
             </div>
           </div>
