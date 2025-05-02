@@ -43,12 +43,19 @@ function App() {
                   <Route
                     path="add-accommodation"
                     element={
-                      <ProtectedRoute allowedRoles={["owner"]}>
+                      <ProtectedRoute allowedRoles={["owner","admin"]}>
                         <AddAccommodationPage />
                       </ProtectedRoute>
                     }
                   />
-                  <Route path="admin-dashboard" element={<AdminDashboard />} />
+                  <Route
+                    path="admin-dashboard"
+                    element={
+                      <ProtectedRoute allowedRoles={["admin"]}>
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
                   <Route
                     path="owner-dashboard"
                     element={
@@ -57,14 +64,21 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-                  <Route path="student-dashboard" element={<UserDashboard />} />
+                  <Route
+                    path="student-dashboard"
+                    element={
+                      <ProtectedRoute allowedRoles={["student"]}>
+                        <UserDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
                   <Route path="accommodations" element={<AccommodationListPage />} />
                   <Route path="accommodation/:id" element={<AccommodationDetailPage />} />
                   <Route path="about" element={<AboutPage />} />
                   <Route
                     path="edit-accommodation/:id"
                     element={
-                      <ProtectedRoute allowedRoles={["owner"]}>
+                      <ProtectedRoute allowedRoles={["owner","admin"]}>
                         <EditAccommodationPage />
                       </ProtectedRoute>
                     }

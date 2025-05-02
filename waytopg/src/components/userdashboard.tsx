@@ -20,7 +20,7 @@ const UserDashboard: React.FC = () => {
     const fetchBookings = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('https://waytopg-dev.onrender.com/api/user/bookings', {
+        const response = await fetch('https://waytopg-backend.onrender.com/api/user/bookings', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
