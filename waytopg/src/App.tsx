@@ -72,14 +72,7 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-                  <Route
-                    path="accommodations"
-                    element={
-                      <ProtectedRoute allowedRoles={["student", "owner", "admin"]}>
-                        <AccommodationListPage />
-                      </ProtectedRoute>
-                    }
-                  />
+                  <Route path="accommodations" element={<AccommodationListPage />} />
                   <Route
                     path="accommodation/:id"
                     element={
