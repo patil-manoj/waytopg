@@ -9,9 +9,10 @@ interface AuthPopupProps {
 
 const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -23,8 +24,8 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
     try {
       const endpoint = isLogin ? 'login' : 'signup';
       const body = isLogin 
-        ? { email, password }
-        : { name, email, password, role: 'student' };
+        ? { phoneNumber, password }
+        : { name, phoneNumber, email, password, role: 'student' };
 
       const response = await fetch(`https://waytopg-dev.onrender.com/api/auth/${endpoint}`, {
         method: 'POST',
@@ -169,43 +170,65 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {!isLogin && (
-              <div className="group">
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Name
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required={!isLogin}
-                    className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm
+              <>
+                <div className="group">
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                    Name
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      id="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required={!isLogin}
+                      className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm
                             focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
                             transition-all duration-200 ease-in-out
                             placeholder:text-gray-400"
-                    placeholder="Enter your name"
-                  />
+                      placeholder="Enter your name"
+                    />
+                  </div>
                 </div>
-              </div>
+                <div className="group">
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    Email
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="email"
+                      id="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required={!isLogin}
+                      className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm
+                            focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                            transition-all duration-200 ease-in-out
+                            placeholder:text-gray-400"
+                      placeholder="Enter your email"
+                    />
+                  </div>
+                </div>
+              </>
             )}
 
             <div className="group">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email
+              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                Phone Number
               </label>
               <div className="relative">
                 <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  type="tel"
+                  id="phoneNumber"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
                   required
+                  pattern="^\+?[\d\s-]{10,}$"
+                  placeholder="+91 1234567890"
                   className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm
                           focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
                           transition-all duration-200 ease-in-out
                           placeholder:text-gray-400"
-                  placeholder="Enter your email"
                 />
               </div>
             </div>

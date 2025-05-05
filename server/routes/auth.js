@@ -18,6 +18,10 @@ router.use(limiter);
 // Validation middleware
 const validateSignup = [
   body('name').trim().isLength({ min: 2 }).escape(),
+  body('phoneNumber')
+    .notEmpty()
+    .matches(/^\+?[\d\s-]{10,}$/)
+    .withMessage('Please provide a valid phone number'),
   body('email').isEmail().normalizeEmail(),
   body('password').isLength({ min: 6 }),
   body('role').isIn(['student', 'owner', 'admin']),
@@ -27,9 +31,11 @@ const validateSignup = [
 ];
 
 const validateLogin = [
-  body('email').isEmail().normalizeEmail(),
+  body('phoneNumber')
+    .notEmpty()
+    .matches(/^\+?[\d\s-]{10,}$/)
+    .withMessage('Please provide a valid phone number'),
   body('password').notEmpty(),
-  // body('role').isIn(['student', 'owner', 'admin']),
 ];
 
 router.post('/signup', validateSignup, async (req, res) => {
@@ -38,19 +44,17 @@ router.post('/signup', validateSignup, async (req, res) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-    console.log(req.body);
     
-    const { name, email, password, role, companyName, businessRegistration, adminCode } = req.body;
-    console.log(email);
-    console.log(password);
-    console.log(role);
+    const { name, phoneNumber, email, password, role, companyName, businessRegistration, adminCode } = req.body;
 
-    console.log(companyName);
-    // Check if email already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Email already in use' });
+    // Check if phone number already exists
+    const existingUserByPhone = await User.findOne({ phoneNumber });
+    if (existingUserByPhone) {
+      return res.status(400).json({ message: 'Phone number already in use' });
     }
+
+    // Email is no longer required to be unique
+    // We'll use phone number as the primary identifier
 
     // Validate role-specific fields
     if (role === 'owner' && (!companyName || !businessRegistration)) {
@@ -68,11 +72,11 @@ router.post('/signup', validateSignup, async (req, res) => {
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    console.log(hashedPassword);
 
     // Create new user
     const user = new User({
       name,
+      phoneNumber,
       email,
       password: hashedPassword,
       role,
@@ -88,9 +92,7 @@ router.post('/signup', validateSignup, async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
-    // console.log('done3');
     res.status(201).json({ token, role: user.role });
-    // console.log('done4');
   } catch (error) {
     console.error('Signup error:', error);
     res.status(500).json({ message: 'Error creating user' });
@@ -103,26 +105,17 @@ router.post('/login', validateLogin, async (req, res) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-    console.log(req.body);
 
-    const { email, password } = req.body;
-    console.log(email);
-    console.log(password);
-    const user = await User.findOne({ email });
+    const { phoneNumber, password } = req.body;
+    
+    // Find user by phone number instead of email
+    const user = await User.findOne({ phoneNumber });
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    console.log(hashedPassword);
-
-    console.log("user.password");
-    console.log(user.password);
     // Check if the password matches
-
     const isMatch = await bcrypt.compare(password, user.password);
-    console.log(isMatch);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -144,6 +137,40 @@ router.post('/login', validateLogin, async (req, res) => {
     res.json({ token, role: user.role });
   } catch (error) {
     console.error('Login error:', error);
+    res.status(500).json({ message: 'Error logging in' });
+  }
+});
+
+// Admin login route
+router.post('/admin-login', validateLogin, async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { phoneNumber, password } = req.body;
+    
+    // Find user by phone number
+    const user = await User.findOne({ phoneNumber });
+    if (!user || user.role !== 'admin') {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Check if the password matches
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+    res.json({ token, role: user.role });
+  } catch (error) {
+    console.error('Admin login error:', error);
     res.status(500).json({ message: 'Error logging in' });
   }
 });

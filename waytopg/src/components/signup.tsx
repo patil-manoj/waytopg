@@ -8,6 +8,7 @@ import { AlertCircle, Loader } from 'lucide-react';
 const SignupPage: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
+    phoneNumber: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -29,6 +30,8 @@ const SignupPage: React.FC = () => {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.name.trim()) newErrors.name = 'Name is required';
+    if (!formData.phoneNumber.trim()) newErrors.phoneNumber = 'Phone number is required';
+    else if (!/^\+?[\d\s-]{10,}$/.test(formData.phoneNumber)) newErrors.phoneNumber = 'Please enter a valid phone number';
     if (!formData.email.trim()) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
     if (!formData.password) newErrors.password = 'Password is required';
@@ -53,6 +56,7 @@ const SignupPage: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
+          phoneNumber: formData.phoneNumber,
           email: formData.email,
           password: formData.password,
           role: formData.role,
@@ -105,6 +109,24 @@ const SignupPage: React.FC = () => {
                 aria-describedby={errors.name ? 'name-error' : undefined}
               />
               {errors.name && <p id="name-error" className="mt-1 text-xs text-red-500">{errors.name}</p>}
+            </div>
+            <div>
+              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
+              <input
+                type="tel"
+                id="phoneNumber"
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleChange}
+                required
+                pattern="^\+?[\d\s-]{10,}$"
+                placeholder="+91 1234567890"
+                className={`mt-1 block w-full px-3 py-2 bg-white border rounded-md text-sm shadow-sm placeholder-gray-400
+                          focus:outline-none focus:ring-1 focus:ring-purple-500 ${errors.phoneNumber ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
+                aria-invalid={errors.phoneNumber ? 'true' : 'false'}
+                aria-describedby={errors.phoneNumber ? 'phoneNumber-error' : undefined}
+              />
+              {errors.phoneNumber && <p id="phoneNumber-error" className="mt-1 text-xs text-red-500">{errors.phoneNumber}</p>}
             </div>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
