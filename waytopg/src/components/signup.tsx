@@ -133,32 +133,37 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl font-bold text-gray-900">Sign Up</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+            Create your account
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Or{' '}
+            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+              sign in to your account
+            </Link>
+          </p>
         </div>
-      </header>
-
-      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
-        <div className="max-w-md w-full space-y-8">
-          {step === 'phone' ? (
+        
+        {step === 'phone' ? (
+          <div className="bg-white p-8 rounded-lg shadow-md border border-gray-200">
             <div className="space-y-6">
               <div className="text-center">
-                <h2 className="text-xl font-semibold">Verify Your Phone Number</h2>
+                <h3 className="text-xl font-semibold text-gray-900">Verify Your Phone Number</h3>
                 <p className="mt-2 text-sm text-gray-600">
                   We'll send you a verification code to confirm your number
                 </p>
               </div>
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                <PhoneSignupForm onVerificationComplete={handlePhoneVerified} />
-              </div>
+              <PhoneSignupForm onVerificationComplete={handlePhoneVerified} />
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          </div>
+        ) : (
+            <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-md border border-gray-200 space-y-6">
               {errors.form && (
-                <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
-                  {errors.form}
+                <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                  <span className="block sm:inline">{errors.form}</span>
                 </div>
               )}
               
@@ -326,7 +331,7 @@ export default function Signup() {
                 type="submit"
                 variant="primary"
                 size="large"
-                className="w-full"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -339,16 +344,26 @@ export default function Signup() {
                 )}
               </Button>
 
-              <div className="text-sm text-center">
-                Already have an account?{' '}
-                <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-                  Sign in
-                </Link>
+              <div className="mt-6">
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                  </div>
+                </div>
+
+                <div className="mt-6 text-sm text-center text-gray-600">
+                  Already have an account?{' '}
+                  <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+                    Sign in to your account
+                  </Link>
+                </div>
               </div>
             </form>
           )}
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
