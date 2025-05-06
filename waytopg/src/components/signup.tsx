@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Loader } from 'lucide-react';
 import { Button } from './ui/Button';
+import PhoneSignupForm from './PhoneSignupForm';
 
 interface FormData {
   name: string;
@@ -97,7 +98,24 @@ export default function Signup() {
       const data = await response.json();
       
       if (response.ok) {
-        navigate(data.role === 'student' ? '/accommodations' : data.role === 'owner' ? '/owner-dashboard' : '/admin-dashboard');
+        // Store the user token and role
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userRole', data.role);
+        
+        // Navigate based on role
+        switch (data.role) {
+          case 'student':
+            navigate('/accommodations');
+            break;
+          case 'owner':
+            navigate('/owner-dashboard');
+            break;
+          case 'admin':
+            navigate('/admin-dashboard');
+            break;
+          default:
+            navigate('/');
+        }
       } else {
         setErrors({ form: data.message });
       }
@@ -125,35 +143,19 @@ export default function Signup() {
       <main className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
         <div className="max-w-md w-full space-y-8">
           {step === 'phone' ? (
-            <div>
-              <div className="text-center mb-6">
+            <div className="space-y-6">
+              <div className="text-center">
                 <h2 className="text-xl font-semibold">Verify Your Phone Number</h2>
                 <p className="mt-2 text-sm text-gray-600">
                   We'll send you a verification code to confirm your number
                 </p>
               </div>
-              <div className="mt-4">
-                <input
-                  type="tel"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleInputChange}
-                  placeholder="Enter your phone number"
-                  className="w-full px-3 py-2 border rounded-md"
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="primary"
-                  className="w-full mt-4"
-                  onClick={() => handlePhoneVerified(formData.phoneNumber)}
-                >
-                  Verify Phone Number
-                </Button>
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <PhoneSignupForm onVerificationComplete={handlePhoneVerified} />
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
               {errors.form && (
                 <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
                   {errors.form}
@@ -170,7 +172,7 @@ export default function Signup() {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className={`mt-1 block w-full rounded-md shadow-sm ${
+                  className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
                     errors.name ? 'border-red-500' : 'border-gray-300'
                   }`}
                   required
@@ -190,7 +192,7 @@ export default function Signup() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`mt-1 block w-full rounded-md shadow-sm ${
+                  className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
                     errors.email ? 'border-red-500' : 'border-gray-300'
                   }`}
                   required
@@ -210,7 +212,7 @@ export default function Signup() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className={`mt-1 block w-full rounded-md shadow-sm ${
+                  className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
                     errors.password ? 'border-red-500' : 'border-gray-300'
                   }`}
                   required
@@ -230,7 +232,7 @@ export default function Signup() {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className={`mt-1 block w-full rounded-md shadow-sm ${
+                  className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
                     errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
                   }`}
                   required
@@ -249,7 +251,7 @@ export default function Signup() {
                   name="role"
                   value={formData.role}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="student">Student</option>
                   <option value="owner">Property Owner</option>
@@ -269,7 +271,7 @@ export default function Signup() {
                       name="companyName"
                       value={formData.companyName}
                       onChange={handleInputChange}
-                      className={`mt-1 block w-full rounded-md shadow-sm ${
+                      className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
                         errors.companyName ? 'border-red-500' : 'border-gray-300'
                       }`}
                     />
@@ -288,7 +290,7 @@ export default function Signup() {
                       name="businessRegistration"
                       value={formData.businessRegistration}
                       onChange={handleInputChange}
-                      className={`mt-1 block w-full rounded-md shadow-sm ${
+                      className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
                         errors.businessRegistration ? 'border-red-500' : 'border-gray-300'
                       }`}
                     />
@@ -310,7 +312,7 @@ export default function Signup() {
                     name="adminCode"
                     value={formData.adminCode}
                     onChange={handleInputChange}
-                    className={`mt-1 block w-full rounded-md shadow-sm ${
+                    className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
                       errors.adminCode ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
