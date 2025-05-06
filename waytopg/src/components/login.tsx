@@ -5,12 +5,14 @@ import Footer from '../components/Footer';
 import Button from '../components/Button';
 import Navbar from './navbar';
 import { Loader } from 'lucide-react';
+import Verification from './Verification';
 
 const LoginPage: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showVerification, setShowVerification] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,18 +29,25 @@ const LoginPage: React.FC = () => {
       if (response.ok) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('userRole', data.role);
-        switch (data.role) {
-          case 'student':
-            navigate('/');
-            break;
-          case 'owner':
-            navigate('/owner-dashboard');
-            break;
-          case 'admin':
-            navigate('/admin-dashboard');
-            break;
-          default:
-            navigate('/');
+
+        // Check if user needs verification
+        if (!data.isEmailVerified || !data.isPhoneVerified) {
+          setShowVerification(true);
+        } else {
+          // Redirect based on role
+          switch (data.role) {
+            case 'student':
+              navigate('/');
+              break;
+            case 'owner':
+              navigate('/owner-dashboard');
+              break;
+            case 'admin':
+              navigate('/admin-dashboard');
+              break;
+            default:
+              navigate('/');
+          }
         }
       } else {
         setError(data.message || 'An error occurred during login');
@@ -130,6 +139,28 @@ const LoginPage: React.FC = () => {
         </div>
       </main>
       <Footer />
+      {showVerification && (
+        <Verification
+          onClose={() => {
+            setShowVerification(false);
+            // After closing verification, redirect based on role
+            const userRole = localStorage.getItem('userRole');
+            switch (userRole) {
+              case 'student':
+                navigate('/');
+                break;
+              case 'owner':
+                navigate('/owner-dashboard');
+                break;
+              case 'admin':
+                navigate('/admin-dashboard');
+                break;
+              default:
+                navigate('/');
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

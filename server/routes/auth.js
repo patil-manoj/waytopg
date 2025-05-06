@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { body, validationResult } from 'express-validator';
 import rateLimit from 'express-rate-limit';
 import User from '../models/user.js';
+import auth from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -14,6 +15,56 @@ const limiter = rateLimit({
 });
 
 router.use(limiter);
+
+// Firebase phone verification is handled on the client side
+// We only need to handle user creation after verification
+
+// Complete signup after phone verification
+router.post('/complete-signup', async (req, res) => {
+  try {
+    const { name, phoneNumber, email, password, role, companyName, businessRegistration } = req.body;
+
+    // Validate required fields
+    if (!name || !phoneNumber || !email || !password || !role) {
+      return res.status(400).json({ message: 'All required fields must be provided' });
+    }
+
+    // Validate owner-specific fields
+    if (role === 'owner' && (!companyName || !businessRegistration)) {
+      return res.status(400).json({ message: 'Company name and business registration are required for owners' });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create new user
+    const user = new User({
+      name,
+      phoneNumber,
+      email,
+      password: hashedPassword,
+      role,
+      isPhoneVerified: true,
+      companyName: role === 'owner' ? companyName : undefined,
+      businessRegistration: role === 'owner' ? businessRegistration : undefined,
+    });
+
+    await user.save();
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    res.status(201).json({ token, role: user.role });
+  } catch (error) {
+    console.error('Error completing signup:', error);
+    res.status(500).json({ message: 'Error creating user' });
+  }
+});
 
 // Validation middleware
 const validateSignup = [
@@ -172,6 +223,152 @@ router.post('/admin-login', validateLogin, async (req, res) => {
   } catch (error) {
     console.error('Admin login error:', error);
     res.status(500).json({ message: 'Error logging in' });
+  }
+});
+
+// Send email verification code
+router.post('/send-email-verification', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.isEmailVerified) {
+      return res.status(400).json({ message: 'Email is already verified' });
+    }
+
+    // Generate a 6-digit verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Set expiration to 10 minutes from now
+    const expirationTime = new Date(Date.now() + 10 * 60 * 1000);
+
+    // Save the code and expiration time
+    user.emailVerificationCode = verificationCode;
+    user.verificationCodeExpires = expirationTime;
+    await user.save();
+
+    // TODO: Integrate with your email service provider
+    // For now, just return the code in the response
+    res.json({ message: 'Verification code sent', code: verificationCode });
+  } catch (error) {
+    console.error('Error sending email verification:', error);
+    res.status(500).json({ message: 'Error sending verification code' });
+  }
+});
+
+// Send phone verification code
+router.post('/send-phone-verification', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.isPhoneVerified) {
+      return res.status(400).json({ message: 'Phone number is already verified' });
+    }
+
+    // Generate a 6-digit verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Set expiration to 10 minutes from now
+    const expirationTime = new Date(Date.now() + 10 * 60 * 1000);
+
+    // Save the code and expiration time
+    user.phoneVerificationCode = verificationCode;
+    user.verificationCodeExpires = expirationTime;
+    await user.save();
+
+    // TODO: Integrate with your SMS service provider
+    // For now, just return the code in the response
+    res.json({ message: 'Verification code sent', code: verificationCode });
+  } catch (error) {
+    console.error('Error sending phone verification:', error);
+    res.status(500).json({ message: 'Error sending verification code' });
+  }
+});
+
+// Verify email code
+router.post('/verify-email', auth, async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code) {
+      return res.status(400).json({ message: 'Verification code is required' });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.isEmailVerified) {
+      return res.status(400).json({ message: 'Email is already verified' });
+    }
+
+    if (!user.emailVerificationCode || !user.verificationCodeExpires) {
+      return res.status(400).json({ message: 'Please request a new verification code' });
+    }
+
+    if (new Date() > user.verificationCodeExpires) {
+      return res.status(400).json({ message: 'Verification code has expired' });
+    }
+
+    if (code !== user.emailVerificationCode) {
+      return res.status(400).json({ message: 'Invalid verification code' });
+    }
+
+    user.isEmailVerified = true;
+    user.emailVerificationCode = undefined;
+    user.verificationCodeExpires = undefined;
+    await user.save();
+
+    res.json({ message: 'Email verified successfully' });
+  } catch (error) {
+    console.error('Error verifying email:', error);
+    res.status(500).json({ message: 'Error verifying email' });
+  }
+});
+
+// Verify phone code
+router.post('/verify-phone', auth, async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code) {
+      return res.status(400).json({ message: 'Verification code is required' });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.isPhoneVerified) {
+      return res.status(400).json({ message: 'Phone number is already verified' });
+    }
+
+    if (!user.phoneVerificationCode || !user.verificationCodeExpires) {
+      return res.status(400).json({ message: 'Please request a new verification code' });
+    }
+
+    if (new Date() > user.verificationCodeExpires) {
+      return res.status(400).json({ message: 'Verification code has expired' });
+    }
+
+    if (code !== user.phoneVerificationCode) {
+      return res.status(400).json({ message: 'Invalid verification code' });
+    }
+
+    user.isPhoneVerified = true;
+    user.phoneVerificationCode = undefined;
+    user.verificationCodeExpires = undefined;
+    await user.save();
+
+    res.json({ message: 'Phone number verified successfully' });
+  } catch (error) {
+    console.error('Error verifying phone:', error);
+    res.status(500).json({ message: 'Error verifying phone number' });
   }
 });
 

@@ -59,6 +59,23 @@ const userSchema = new mongoose.Schema({
     type: Boolean, 
     default: function() { return this.role !== 'owner'; } 
   },
+  isEmailVerified: {
+    type: Boolean,
+    default: false
+  },
+  isPhoneVerified: {
+    type: Boolean,
+    default: false
+  },
+  emailVerificationCode: {
+    type: String
+  },
+  phoneVerificationCode: {
+    type: String
+  },
+  verificationCodeExpires: {
+    type: Date
+  }
 }, {
   timestamps: true
 });
