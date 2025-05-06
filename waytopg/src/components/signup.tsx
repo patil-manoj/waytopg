@@ -16,6 +16,8 @@ interface FormData {
   companyName?: string;
   businessRegistration?: string;
   adminCode?: string;
+  isPhoneVerified: boolean;
+  isEmailVerified: boolean;
 }
 
 interface FormErrors {
@@ -40,7 +42,9 @@ export default function Signup() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'student'
+    role: 'student',
+    isPhoneVerified: false,
+    isEmailVerified: false
   });
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -57,8 +61,10 @@ export default function Signup() {
     if (!formData.phoneNumber.trim()) newErrors.phoneNumber = 'Phone number is required';
     else if (!/^\+?[\d\s-]{10,}$/.test(formData.phoneNumber)) newErrors.phoneNumber = 'Please enter a valid phone number';
     
-    if (!formData.email.trim()) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
+    // Email is optional during signup
+    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'If provided, email must be valid';
+    }
     
     if (!formData.password) newErrors.password = 'Password is required';
     else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
@@ -80,6 +86,12 @@ export default function Signup() {
     e.preventDefault();
     if (!validateForm()) return;
 
+    // Check if phone is verified
+    if (!formData.isPhoneVerified) {
+      setErrors({ form: 'Phone number must be verified before creating account' });
+      return;
+    }
+
     try {
       setIsLoading(true);
       const response = await fetch('https://waytopg-dev.onrender.com/api/auth/signup', {
@@ -88,9 +100,11 @@ export default function Signup() {
         body: JSON.stringify({
           name: formData.name,
           phoneNumber: formData.phoneNumber,
-          email: formData.email,
+          email: formData.email || undefined, // Make email optional
           password: formData.password,
           role: formData.role,
+          isPhoneVerified: formData.isPhoneVerified,
+          isEmailVerified: false, // Email verification can be done later
           companyName: formData.role === 'owner' ? formData.companyName : undefined,
           businessRegistration: formData.role === 'owner' ? formData.businessRegistration : undefined,
           adminCode: formData.role === 'admin' ? formData.adminCode : undefined,
@@ -130,8 +144,16 @@ export default function Signup() {
     }
   };
 
-  const handlePhoneVerified = (verifiedNumber: string) => {
-    setFormData(prev => ({ ...prev, phoneNumber: verifiedNumber }));
+  const handlePhoneVerified = (verifiedNumber: string, isVerified: boolean) => {
+    if (!isVerified) {
+      setErrors({ form: 'Phone number must be verified before proceeding' });
+      return;
+    }
+    setFormData(prev => ({ 
+      ...prev, 
+      phoneNumber: verifiedNumber,
+      isPhoneVerified: true 
+    }));
     setStep('details');
   };
 

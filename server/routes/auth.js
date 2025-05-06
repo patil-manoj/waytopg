@@ -25,8 +25,13 @@ router.post('/complete-signup', async (req, res) => {
     const { name, phoneNumber, email, password, role, companyName, businessRegistration } = req.body;
 
     // Validate required fields
-    if (!name || !phoneNumber || !email || !password || !role) {
-      return res.status(400).json({ message: 'All required fields must be provided' });
+    if (!name || !phoneNumber || !password || !role) {
+      return res.status(400).json({ message: 'Name, phone number, password, and role are required' });
+    }
+    
+    // Validate phone verification
+    if (!req.body.isPhoneVerified) {
+      return res.status(400).json({ message: 'Phone number must be verified before signup' });
     }
 
     // Validate owner-specific fields
@@ -38,14 +43,29 @@ router.post('/complete-signup', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Check for existing user with same phone number
+    const existingUserByPhone = await User.findOne({ phoneNumber });
+    if (existingUserByPhone) {
+      return res.status(400).json({ message: 'Phone number already registered' });
+    }
+
+    // Check for existing user with same email if provided
+    if (email) {
+      const existingUserByEmail = await User.findOne({ email });
+      if (existingUserByEmail) {
+        return res.status(400).json({ message: 'Email already registered' });
+      }
+    }
+
     // Create new user
     const user = new User({
       name,
       phoneNumber,
-      email,
+      email: email || undefined,
       password: hashedPassword,
       role,
       isPhoneVerified: true,
+      isEmailVerified: false,
       companyName: role === 'owner' ? companyName : undefined,
       businessRegistration: role === 'owner' ? businessRegistration : undefined,
     });

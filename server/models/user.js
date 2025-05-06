@@ -24,10 +24,25 @@ const userSchema = new mongoose.Schema({
   },
   email: { 
     type: String, 
-    required: true,
+    required: false, // Make email optional
     trim: true,
     lowercase: true,
-    validate: [validator.isEmail, 'Please provide a valid email']
+    sparse: true, // Allow null/undefined while maintaining unique index
+    validate: {
+      validator: function(v) {
+        // Skip validation if email is not provided
+        return !v || validator.isEmail(v);
+      },
+      message: 'Please provide a valid email'
+    }
+  },
+  isEmailVerified: {
+    type: Boolean,
+    default: false
+  },
+  isPhoneVerified: {
+    type: Boolean,
+    default: false
   },
   password: { 
     type: String, 

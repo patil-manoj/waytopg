@@ -5,7 +5,7 @@ import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 
 interface PhoneSignupFormProps {
-  onVerificationComplete: (phoneNumber: string) => void;
+  onVerificationComplete: (phoneNumber: string, isVerified: boolean) => void;
 }
 
 const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplete }) => {
@@ -95,7 +95,7 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
     try {
       const credential = await confirmationResult.confirm(otp);
       if (credential.user) {
-        onVerificationComplete(phoneNumber);
+        onVerificationComplete(phoneNumber, true);
       }
     } catch (error) {
       console.error('Error verifying OTP:', error);
