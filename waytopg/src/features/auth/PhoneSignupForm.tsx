@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Button from '@/components/Button';
 import { Loader } from 'lucide-react';
 import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
@@ -8,39 +8,64 @@ interface PhoneSignupFormProps {
   onVerificationComplete: (phoneNumber: string, isVerified: boolean) => void;
 }
 
+declare global {
+  interface Window {
+    recaptchaVerifier?: RecaptchaVerifier;
+  }
+}
+
 const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplete }) => {
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-
-  const [recaptchaVerifier, setRecaptchaVerifier] = useState<RecaptchaVerifier | null>(null);
+  const verifierRef = useRef<RecaptchaVerifier | null>(null);
   const [confirmationResult, setConfirmationResult] = useState<import('firebase/auth').ConfirmationResult | null>(null);
 
   useEffect(() => {
-    if (!recaptchaVerifier) {
-      // Initialize reCAPTCHA verifier
+    // Clean up any existing reCAPTCHA
+    if (verifierRef.current) {
+      verifierRef.current.clear();
+      verifierRef.current = null;
+    }
+
+    // Initialize reCAPTCHA verifier
+    try {
       const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
         'size': 'normal',
         'callback': () => {
-          // reCAPTCHA solved, allow signInWithPhoneNumber.
+          console.log('reCAPTCHA solved, enabling send OTP button');
+        },
+        'expired-callback': () => {
+          console.log('reCAPTCHA expired');
+          setError('reCAPTCHA expired. Please solve it again.');
+          if (verifierRef.current) {
+            verifierRef.current.clear();
+            verifierRef.current = null;
+          }
         }
       });
-      setRecaptchaVerifier(verifier);
 
-      return () => {
-        if (verifier) {
-          verifier.clear();
-        }
-      };
+      verifierRef.current = verifier;
+      verifier.render(); // Explicitly render the reCAPTCHA
+    } catch (error) {
+      console.error('Error initializing reCAPTCHA:', error);
+      setError('Error initializing reCAPTCHA. Please refresh the page.');
     }
-  }, [recaptchaVerifier]);
+
+    return () => {
+      if (verifierRef.current) {
+        verifierRef.current.clear();
+        verifierRef.current = null;
+      }
+    };
+  }, []);
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!recaptchaVerifier) {
-      setError('Please wait for reCAPTCHA to load');
+    if (!verifierRef.current) {
+      setError('Please wait for reCAPTCHA to load or refresh the page');
       return;
     }
 
@@ -51,31 +76,44 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
       // Format phone number to E.164 format
       let formattedPhoneNumber = phoneNumber.trim();
       if (!formattedPhoneNumber.startsWith('+')) {
-        formattedPhoneNumber = formattedPhoneNumber.startsWith('0') 
-          ? '+91' + formattedPhoneNumber.slice(1) 
-          : '+91' + formattedPhoneNumber;
+        formattedPhoneNumber = '+91' + formattedPhoneNumber.replace(/^0/, '');
       }
       
-      // Create a new instance for each request as per Firebase best practices
-      const newRecaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'normal',
-        callback: () => {
-          console.log('reCAPTCHA solved');
-        },
-        'expired-callback': () => {
-          setError('reCAPTCHA expired. Please try again.');
-        }
-      });
+      console.log('Sending OTP to:', formattedPhoneNumber);
 
-      const confirmation = await signInWithPhoneNumber(auth, formattedPhoneNumber, newRecaptchaVerifier);
+      const confirmation = await signInWithPhoneNumber(auth, formattedPhoneNumber, verifierRef.current);
       setConfirmationResult(confirmation);
       setStep('otp');
-    } catch (error: unknown) {
+      console.log('OTP sent successfully');
+    } catch (error) {
       console.error('Error sending OTP:', error);
       if (error instanceof Error) {
         setError(error.message);
       } else {
         setError('Failed to send OTP. Please try again.');
+      }
+      
+      // Reinitialize reCAPTCHA on error
+      if (verifierRef.current) {
+        verifierRef.current.clear();
+        verifierRef.current = null;
+      }
+      
+      try {
+        const newVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          'size': 'normal',
+          'callback': () => {
+            console.log('reCAPTCHA solved');
+          },
+          'expired-callback': () => {
+            setError('reCAPTCHA expired. Please try again.');
+          }
+        });
+        verifierRef.current = newVerifier;
+        newVerifier.render();
+      } catch (recaptchaError) {
+        console.error('Error reinitializing reCAPTCHA:', recaptchaError);
+        setError('Error reinitializing reCAPTCHA. Please refresh the page.');
       }
     } finally {
       setIsLoading(false);
