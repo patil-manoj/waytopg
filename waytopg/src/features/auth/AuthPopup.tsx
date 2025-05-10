@@ -28,7 +28,7 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
         ? { phoneNumber, password }
         : { name, phoneNumber, email, password, role: 'student' };
 
-      const response = await fetch(`https://waytopg-dev.onrender.com/api/auth/${endpoint}`, {
+      const response = await fetch(`https://waytopg-backend.onrender.com/api/auth/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
