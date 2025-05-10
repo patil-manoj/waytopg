@@ -73,9 +73,8 @@ const HomePage: React.FC = () => {
             >
               <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/90 backdrop-blur-sm shadow-md text-blue-600 text-sm font-medium">
                 <Sparkles className="w-4 h-4 mr-2 flex-shrink-0" />
-                <span className="hidden sm:inline">Trusted by </span>
-                <span> 20,000+ Students</span>
-                <span className="hidden sm:inline"> Across India</span>
+                <span className="hidden sm:inline">Trusted by 20,000+ Students across India</span>
+                <span className="sm:hidden">Trusted by 20,000+ Students</span>
               </div>
             </motion.div>
 
