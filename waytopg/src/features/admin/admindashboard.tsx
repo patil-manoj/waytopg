@@ -455,8 +455,12 @@ const AdminDashboard: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">{accommodation.owner.name}</div>
-                            <div className="text-sm text-gray-500">{accommodation.owner.email}</div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {accommodation.owner ? accommodation.owner.name : 'No owner assigned'}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {accommodation.owner ? accommodation.owner.email : 'N/A'}
+                            </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap space-x-2">
