@@ -3,7 +3,7 @@ import { User } from '@/types';
 
 export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(null);  // used in useEffect
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
