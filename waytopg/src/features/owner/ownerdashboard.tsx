@@ -205,9 +205,18 @@ const OwnerDashboard: React.FC = () => {
             </table>
           </div>
         </div>
-        <div className="mt-8 text-center">
-          <Link to="/owner/bookings" className="text-green-600 hover:text-green-700 font-medium">
-            View Bookings
+        {/* Stats & Bookings Link */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-8">
+          <div className="bg-white p-6 rounded-xl shadow-md flex flex-col items-center">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Total Accommodations</h3>
+            <p className="text-3xl font-bold text-blue-600">{accommodations.length}</p>
+          </div>
+          <Link 
+            to="/owner/bookings" 
+            className="bg-white p-6 rounded-xl shadow-md flex flex-col items-center hover:bg-blue-50 transition-colors duration-200"
+          >
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Manage Bookings</h3>
+            <p className="text-blue-600">View all booking requests →</p>
           </Link>
         </div>
       </main>

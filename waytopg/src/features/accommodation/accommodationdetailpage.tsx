@@ -72,7 +72,7 @@ const AccommodationDetailPage: React.FC = () => {
     fetchAccommodation();
   }, [id]);
 
-  const handleBooking = () => {
+  const handleBooking = async () => {
     if (!checkInDate || !checkOutDate) {
       alert('Please select check-in and check-out dates');
       return;
@@ -81,8 +81,40 @@ const AccommodationDetailPage: React.FC = () => {
       alert('Check-out date must be after check-in date');
       return;
     }
-    // Simulate booking process 
-    alert(`Booking initiated for ${checkInDate} to ${checkOutDate}`);
+    
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Please login to book accommodation');
+        return;
+      }
+
+      const response = await fetch('https://waytopg-dev.onrender.com/api/student/book', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          accommodation: id,
+          checkIn: checkInDate,
+          checkOut: checkOutDate
+        })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert('Booking confirmed successfully!');
+        // Refresh the accommodation data to update status
+        window.location.reload();
+      } else {
+        alert(data.message || 'Error making booking. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error booking accommodation:', error);
+      alert('Error making booking. Please try again.');
+    }
   };
 
   if (isLoading) {

@@ -19,6 +19,7 @@ const AccommodationListPage = lazy(() => import("@/features/accommodation/accomm
 const AccommodationDetailPage = lazy(() => import("@/features/accommodation/accommodationdetailpage"));
 const AddAccommodationPage = lazy(() => import("@/features/accommodation/addaccommodation"));
 const EditAccommodationPage = lazy(() => import("@/features/accommodation/editaccommodation"));
+const OwnerBookings = lazy(() => import("@/features/owner/ownerbookings"));
 
 // Other components
 const AboutPage = lazy(() => import("@/components/about"));
@@ -96,6 +97,14 @@ function App() {
                     element={
                       <ProtectedRoute allowedRoles={["owner","admin"]}>
                         <EditAccommodationPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="owner/bookings"
+                    element={
+                      <ProtectedRoute allowedRoles={["owner"]}>
+                        <OwnerBookings />
                       </ProtectedRoute>
                     }
                   />
