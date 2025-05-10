@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import Footer from '../components/Footer';
-import Button from './Button';
+import Footer from '@/components/Footer';
+import { Button } from '@/components/ui/Button';
 import { MapPin, Star, Wifi, Tv, Users, Utensils, Car, Snowflake, Sun } from 'lucide-react';
-import Navbar from './navbar';
+import Navbar from '@/components/navbar';
 
 interface Accommodation {
   id: string;

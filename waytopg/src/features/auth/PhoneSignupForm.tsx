@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import Button from './Button';
+import Button from '@/components/Button';
 import { Loader } from 'lucide-react';
 import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { auth } from '@/lib/firebase';
 
 interface PhoneSignupFormProps {
   onVerificationComplete: (phoneNumber: string, isVerified: boolean) => void;

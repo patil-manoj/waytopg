@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-// import Header from '../components/Header';
-import Footer from './Footer';
-import Button from './Button';
-import Navbar from './navbar';
+'use client'
 
-const OwnerLoginPage: React.FC = () => {
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+// import Header from '../components/Header';
+import Footer from '@/components/Footer';
+import Button from '@/components/Button';
+import Navbar from '@/components/navbar';
+
+const AdminLoginPage: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
@@ -13,7 +15,7 @@ const OwnerLoginPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('https://waytopg-dev.onrender.com/api/auth/owner-login', {
+      const response = await fetch('https://waytopg-dev.onrender.com/api/auth/admin-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phoneNumber, password }),
@@ -21,8 +23,8 @@ const OwnerLoginPage: React.FC = () => {
       const data = await response.json();
       if (response.ok) {
         localStorage.setItem('token', data.token);
-        localStorage.setItem('userRole', 'owner');
-        navigate('/owner-dashboard');
+        localStorage.setItem('userType', 'admin');
+        navigate('/admin-dashboard');
       } else {
         alert(data.message);
       }
@@ -37,7 +39,7 @@ const OwnerLoginPage: React.FC = () => {
       <Navbar />
       <main className="flex-grow flex items-center justify-center">
         <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
-          <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Accommodation Owner Login</h2>
+          <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Admin Login</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
@@ -66,15 +68,9 @@ const OwnerLoginPage: React.FC = () => {
               />
             </div>
             <Button type="submit" variant="primary" size="large" className="w-full">
-              Login as Owner
+              Login as Admin
             </Button>
           </form>
-          <p className="mt-4 text-center text-sm text-gray-600">
-            Don't have an owner account?{' '}
-            <Link to="/owner-signup" className="font-medium text-green-600 hover:text-green-500">
-              Sign up as an owner
-            </Link>
-          </p>
         </div>
       </main>
       <Footer />
@@ -82,4 +78,4 @@ const OwnerLoginPage: React.FC = () => {
   );
 };
 
-export default OwnerLoginPage;
+export default AdminLoginPage;

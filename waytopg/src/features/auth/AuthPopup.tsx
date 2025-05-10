@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import Button from './Button';
+import { Button } from '@/components/ui/Button';
+// import { authService } from '@/services/auth.service';
 
 interface AuthPopupProps {
   isOpen: boolean;

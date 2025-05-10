@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import Footer from '../components/Footer';
-import Button from '../components/Button';
+import Footer from '@/components/Footer';
+import Button from '@/components/Button';
+import Navbar from '@/components/navbar';
 import { Search, MapPin, Star, RefreshCw, Loader } from 'lucide-react';
-import Navbar from './navbar';
-import AuthPopup from './AuthPopup';
+import AuthPopup from '../auth/AuthPopup';
 
 interface AccommodationResponse {
   _id: string;

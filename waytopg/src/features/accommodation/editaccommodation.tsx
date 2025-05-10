@@ -3,9 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Home, MapPin, IndianRupee, Upload, Plus, Minus, Loader, Wifi, Tv, Car, 
   Utensils, Dumbbell, Fan, Snowflake, Bath } from 'lucide-react';
-import Navbar from './navbar';
-import Footer from './Footer';
-import Button from './Button';
+import Footer from '@/components/Footer';
+import Button from '@/components/Button';
+import Navbar from '@/components/navbar';
 
 interface AmenityOption {
   id: string;

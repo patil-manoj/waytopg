@@ -1,10 +1,12 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { Loader } from 'lucide-react';
-import { Button } from './ui/Button';
 import PhoneSignupForm from './PhoneSignupForm';
-import Navbar from './navbar';
-import Footer from './Footer';
+// import UserDetailsForm from './UserDetailsForm';
+import Navbar from '@/components/navbar';
+import Footer from '@/components/Footer';
+import { Button } from '@/components/ui/Button';
+// import type { User } from '@/types';
 
 interface FormData {
   name: string;

@@ -1,27 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { RefreshCw, Users, Home, BookOpen, Plus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import Footer from './Footer';
-import Button from './Button';
-import Navbar from './navbar';
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: string;
-  isApproved: boolean;
-  companyName?: string;
-  businessRegistration?: string;
-  createdAt: string;
-}
-
-interface DashboardStats {
-  totalUsers: number;
-  pendingApprovals: number;
-  totalAccommodations: number;
-  totalBookings: number;
-}
+import { Home, Users, BookOpen, Plus, RefreshCw } from 'lucide-react';
+import Navbar from '@/components/navbar';
+import Footer from '@/components/Footer';
+import { Button } from '@/components/ui/Button';
+import type { User, DashboardStats } from '@/types';
 
 const AdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);

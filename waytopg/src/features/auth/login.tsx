@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 // import Header from '../components/Header';
-import Footer from '../components/Footer';
-import Button from '../components/Button';
-import Navbar from './navbar';
+import Footer from '@/components/Footer';
+import Button from '@/components/Button';
+import Navbar from '@/components/navbar';
 import { Loader } from 'lucide-react';
 import Verification from './Verification';
 
