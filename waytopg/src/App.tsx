@@ -2,6 +2,7 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { HelmetProvider } from 'react-helmet-async';
+import ScrollToTop from "@/components/ScrollToTop";
 
 // Page components
 import HomePage from "@/components/home";
@@ -28,6 +29,7 @@ function App() {
   return (
     <HelmetProvider>
       <Router>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<HomePage />} />
           {/* All other routes with Suspense */}

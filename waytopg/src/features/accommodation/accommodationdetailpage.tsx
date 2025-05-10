@@ -127,17 +127,17 @@ const AccommodationDetailPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-white flex flex-col">
       <Navbar />
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="flex-grow container mx-auto px-2 sm:px-4 py-4 sm:py-8">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           {/* Image Gallery */}
           <div className="relative">
             {/* Main Image Display */}
-            <div className="h-[500px] overflow-hidden">
+            <div className="h-[300px] sm:h-[400px] md:h-[500px] overflow-hidden">
               {accommodation.images && accommodation.images.length > 0 ? (
                 <img 
                   src={selectedImage || accommodation.images[0].url} 
                   alt={accommodation.name} 
-                  className="w-full h-[500px] object-cover cursor-pointer transition-transform duration-300 hover:scale-105"
+                  className="w-full h-[300px] sm:h-[400px] md:h-[500px] object-cover cursor-pointer transition-transform duration-300 hover:scale-105"
                   onClick={() => setSelectedImage(selectedImage ? null : accommodation.images[0].url)}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
@@ -154,11 +154,11 @@ const AccommodationDetailPage: React.FC = () => {
             {/* Thumbnail Gallery */}
             {accommodation.images && accommodation.images.length > 1 && (
               <div className="absolute bottom-4 left-0 right-0">
-                <div className="flex gap-2 justify-center px-4 overflow-x-auto py-2">
+                <div className="flex gap-1 sm:gap-2 justify-center px-2 sm:px-4 overflow-x-auto py-2">
                   {accommodation.images.map((image, index) => (
                     <div
                       key={image.public_id}
-                      className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden cursor-pointer 
+                      className={`relative flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden cursor-pointer 
                         ${selectedImage === image.url ? 'ring-2 ring-blue-500' : 'ring-1 ring-white/50'}`}
                       onClick={() => setSelectedImage(image.url)}
                     >
@@ -198,15 +198,16 @@ const AccommodationDetailPage: React.FC = () => {
             )}
           </div>
           
-          <div className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="p-4 sm:p-6 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
             {/* Left column: Accommodation details */}
             <div className="lg:col-span-2">
-              <div className="flex justify-between items-start mb-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-0 mb-4">
                 <div>
-                  <h1 className="text-3xl font-bold">{accommodation.name}</h1>
-                  <p className="text-gray-600 flex items-center mt-2">
-                    <MapPin className="w-5 h-5 mr-2" /> {accommodation.address}
-                    {accommodation.city && `, ${accommodation.city}`}
+                  <h1 className="text-2xl sm:text-3xl font-bold">{accommodation.name}</h1>
+                  <p className="text-gray-600 flex flex-wrap items-center mt-2">
+                    <MapPin className="w-5 h-5 mr-2 flex-shrink-0" /> 
+                    <span className="break-words">{accommodation.address}
+                    {accommodation.city && `, ${accommodation.city}`}</span>
                   </p>
                 </div>
                 <div className="flex items-center">
@@ -221,7 +222,7 @@ const AccommodationDetailPage: React.FC = () => {
               </div>
               
               {/* Property Details */}
-              <div className="mb-6 grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+              <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
                 <div>
                   <h3 className="font-medium text-gray-900">Property Type</h3>
                   <p className="text-gray-600 capitalize">{accommodation.type}</p>
@@ -236,7 +237,7 @@ const AccommodationDetailPage: React.FC = () => {
 
               <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-4">Amenities</h2>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-4">
                   {accommodation.amenities.map((amenity, index) => (
                     <div key={index} className="flex items-center text-gray-600">
                       {amenityIcons[amenity] ? (
