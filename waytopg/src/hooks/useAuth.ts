@@ -12,7 +12,18 @@ export const useAuth = () => {
     if (token) {
       setIsAuthenticated(true);
       // Fetch user data from your authentication service
-      // Example: fetchUserData(token).then(userData => setUser(userData));
+      fetch('https://waytopg-dev.onrender.com/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+        .then(res => res.json())
+        .then(userData => {
+          if (userData.success) {
+            setUser(userData.data);
+          }
+        })
+        .catch(console.error);
     }
     setLoading(false);
   }, []);
