@@ -1,6 +1,7 @@
 // External imports
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import { HelmetProvider } from 'react-helmet-async';
 
 // Page components
 import HomePage from "@/components/home";
@@ -25,7 +26,7 @@ const NotFoundPage = lazy(() => import("@/components/NotFound"));
 
 function App() {
   return (
-    <>
+    <HelmetProvider>
       <Router>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -103,7 +104,7 @@ function App() {
           />
         </Routes>
       </Router>
-    </>
+    </HelmetProvider>
   );
 }
 
