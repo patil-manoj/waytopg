@@ -1,27 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { RefreshCw, Users, Home, BookOpen, Plus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import Footer from './Footer';
-import Button from './Button';
-import Navbar from './navbar';
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: string;
-  isApproved: boolean;
-  companyName?: string;
-  businessRegistration?: string;
-  createdAt: string;
-}
-
-interface DashboardStats {
-  totalUsers: number;
-  pendingApprovals: number;
-  totalAccommodations: number;
-  totalBookings: number;
-}
+import { Home, Users, BookOpen, Plus, RefreshCw } from 'lucide-react';
+import Navbar from '@/components/navbar';
+import Footer from '@/components/Footer';
+import { Button } from '@/components/ui/Button';
+import type { User, DashboardStats } from '@/types';
 
 const AdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -63,7 +46,7 @@ const AdminDashboard: React.FC = () => {
         return;
       }
 
-      const response = await fetch('https://waytopg-backend.onrender.com/api/admin/accommodations', {
+      const response = await fetch('https://waytopg-dev.onrender.com/api/admin/accommodations', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -96,7 +79,7 @@ const AdminDashboard: React.FC = () => {
     try {
       setDeletingIds(prev => new Set(prev).add(accommodationId));
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://waytopg-backend.onrender.com/api/admin/accommodations/${accommodationId}`, {
+      const response = await fetch(`https://waytopg-dev.onrender.com/api/admin/accommodations/${accommodationId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -146,13 +129,13 @@ const AdminDashboard: React.FC = () => {
       
       // Fetch users and stats in parallel
       const [usersResponse, statsResponse] = await Promise.all([
-        fetch('https://waytopg-backend.onrender.com/api/admin/users', {
+        fetch('https://waytopg-dev.onrender.com/api/admin/users', {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         }),
-        fetch('https://waytopg-backend.onrender.com/api/admin/stats', {
+        fetch('https://waytopg-dev.onrender.com/api/admin/stats', {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -219,7 +202,7 @@ const AdminDashboard: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://waytopg-backend.onrender.com/api/admin/approve-owner/${userId}`, {
+      const response = await fetch(`https://waytopg-dev.onrender.com/api/admin/approve-owner/${userId}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -252,7 +235,7 @@ const AdminDashboard: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://waytopg-backend.onrender.com/api/admin/users/${userId}`, {
+      const response = await fetch(`https://waytopg-dev.onrender.com/api/admin/users/${userId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -472,8 +455,12 @@ const AdminDashboard: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">{accommodation.owner.name}</div>
-                            <div className="text-sm text-gray-500">{accommodation.owner.email}</div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {accommodation.owner ? accommodation.owner.name : 'No owner assigned'}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {accommodation.owner ? accommodation.owner.email : 'N/A'}
+                            </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap space-x-2">

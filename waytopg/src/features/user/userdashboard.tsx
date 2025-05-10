@@ -1,21 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import Footer from '../components/Footer';
-import Button from '../components/Button';
-import Navbar from './navbar';
-
-interface Booking {
-  _id: string;
-  accommodation: {
-    _id: string;
-    name: string;
-    address: string;
-    images: Array<{ url: string }>;
-  };
-  checkIn: string;
-  checkOut: string;
-  status: 'pending' | 'confirmed' | 'cancelled';
-}
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import Navbar from '@/components/navbar';
+import Footer from '@/components/Footer';
+import { Button } from '@/components/ui/Button';
+import type { Booking } from '@/types';
 
 const UserDashboard: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -33,7 +21,7 @@ const UserDashboard: React.FC = () => {
 
       setLoading(true);
       setError(null);
-      const response = await fetch('https://waytopg-backend.onrender.com/api/student/bookings', {
+      const response = await fetch('https://waytopg-dev.onrender.com/api/student/bookings', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -64,7 +52,7 @@ const UserDashboard: React.FC = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://waytopg-backend.onrender.com/api/student/bookings/${bookingId}/cancel`, {
+      const response = await fetch(`https://waytopg-dev.onrender.com/api/student/bookings/${bookingId}/cancel`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

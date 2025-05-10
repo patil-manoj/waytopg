@@ -4,9 +4,9 @@ import { motion } from 'framer-motion';
 import { Home, MapPin, IndianRupee, Upload, Plus, Minus, Loader, Wifi, Tv, Car, 
   Utensils, Dumbbell, Fan, Snowflake, Bath, Wind, ShieldCheck, BookOpen, Package,
   Zap, ArrowUpDown, Video, Info, CreditCard, Map } from 'lucide-react';
-import Navbar from './navbar';
-import Footer from './Footer';
-import Button from './Button';
+import Footer from '@/components/Footer';
+import Button from '@/components/Button';
+import Navbar from '@/components/navbar';
 
 interface AmenityOption {
   id: string;
@@ -67,7 +67,7 @@ const AddAccommodationPage: React.FC = () => {
       
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('https://waytopg-backend.onrender.com/api/admin/users', {
+        const response = await fetch('https://waytopg-dev.onrender.com/api/admin/users', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -277,8 +277,8 @@ const AddAccommodationPage: React.FC = () => {
 
       // Use different endpoints for admin and owner
       const endpoint = isAdmin ? 
-        'https://waytopg-backend.onrender.com/api/admin/accommodations' :
-        'https://waytopg-backend.onrender.com/api/owner/accommodations';
+        'https://waytopg-dev.onrender.com/api/admin/accommodations' :
+        'https://waytopg-dev.onrender.com/api/owner/accommodations';
 
       const response = await fetch(endpoint, {
         method: 'POST',

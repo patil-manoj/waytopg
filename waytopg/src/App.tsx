@@ -1,25 +1,32 @@
+// External imports
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { lazy, Suspense } from "react";
-// const HomePage = lazy(() => import("./components/home"));
-import HomePage from "./components/home";
-const LoginPage = lazy(() => import("./components/login"));
-const SignupPage = lazy(() => import("./components/signup"));
-const AdminLoginPage = lazy(() => import("./components/adminloginpage"));
-const OwnerLoginPage = lazy(() => import("./components/ownerloginpage"));
-const AdminDashboard = lazy(() => import("./components/admindashboard"));
-const OwnerDashboard = lazy(() => import("./components/ownerdashboard"));
-const UserDashboard = lazy(() => import("./components/userdashboard"));
-const AccommodationListPage = lazy(() => import("./components/accommodationlistpage"));
-const AccommodationDetailPage = lazy(() => import("./components/accommodationdetailpage"));
-const AboutPage = lazy(() => import("./components/about"));
-const AddAccommodationPage = lazy(() => import("./components/addaccommodation"));
-const ProtectedRoute = lazy(() => import("./components/ProtectedRoute"));
-const EditAccommodationPage = lazy(() => import("./components/editaccommodation"));
-const NotFoundPage = lazy(() => import("./components/NotFound"));
+import { HelmetProvider } from 'react-helmet-async';
+
+// Page components
+import HomePage from "@/components/home";
+const LoginPage = lazy(() => import("@/features/auth/login"));
+const SignupPage = lazy(() => import("@/features/auth/signup"));
+const AdminLoginPage = lazy(() => import("@/features/admin/adminloginpage"));
+const OwnerLoginPage = lazy(() => import("@/features/owner/ownerloginpage"));
+const AdminDashboard = lazy(() => import("@/features/admin/admindashboard"));
+const OwnerDashboard = lazy(() => import("@/features/owner/ownerdashboard"));
+const UserDashboard = lazy(() => import("@/features/user/userdashboard"));
+
+// Feature components
+const AccommodationListPage = lazy(() => import("@/features/accommodation/accommodationlistpage"));
+const AccommodationDetailPage = lazy(() => import("@/features/accommodation/accommodationdetailpage"));
+const AddAccommodationPage = lazy(() => import("@/features/accommodation/addaccommodation"));
+const EditAccommodationPage = lazy(() => import("@/features/accommodation/editaccommodation"));
+
+// Other components
+const AboutPage = lazy(() => import("@/components/about"));
+const ProtectedRoute = lazy(() => import("@/components/ProtectedRoute"));
+const NotFoundPage = lazy(() => import("@/components/NotFound"));
 
 function App() {
   return (
-    <>
+    <HelmetProvider>
       <Router>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -97,7 +104,7 @@ function App() {
           />
         </Routes>
       </Router>
-    </>
+    </HelmetProvider>
   );
 }
 

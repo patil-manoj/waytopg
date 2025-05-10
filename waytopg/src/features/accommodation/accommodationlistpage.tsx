@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import Footer from '../components/Footer';
-import Button from '../components/Button';
+import { useSearchParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
+import Footer from '@/components/Footer';
+import Button from '@/components/Button';
+import Navbar from '@/components/navbar';
 import { Search, MapPin, Star, RefreshCw, Loader } from 'lucide-react';
-import Navbar from './navbar';
+import AuthPopup from '../auth/AuthPopup';
 
 interface AccommodationResponse {
   _id: string;
@@ -25,8 +27,6 @@ interface Accommodation {
   type: string;
 }
 
-
-
 const AccommodationListPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
@@ -34,7 +34,8 @@ const AccommodationListPage: React.FC = () => {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('');
-  
+  const [showAuthPopup, setShowAuthPopup] = useState(false);
+
   // Get search query from URL parameters when component mounts
   useEffect(() => {
     const searchQuery = searchParams.get('search');
@@ -50,7 +51,7 @@ const AccommodationListPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('https://waytopg-backend.onrender.com/api/accommodations', {
+      const response = await fetch('https://waytopg-dev.onrender.com/api/accommodations', {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -103,8 +104,60 @@ const AccommodationListPage: React.FC = () => {
     setFilteredAccommodations(filtered);
   }, [priceRange, searchTerm, selectedType, accommodations]);
 
+  // Generate dynamic meta description based on filters
+  const getMetaDescription = () => {
+    const typeDesc = selectedType ? `${selectedType} accommodations` : 'verified accommodations';
+    const priceDesc = `under ₹${priceRange[1].toLocaleString()}`;
+    const searchDesc = searchTerm ? ` near ${searchTerm}` : '';
+    return `Find ${typeDesc}${searchDesc} ${priceDesc} in India. Browse through verified PGs, hostels, and student apartments with detailed photos, amenities, and genuine reviews. Safe and affordable housing options for students.`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex flex-col">
+      <Helmet>
+        <title>{searchTerm ? `${searchTerm} Accommodations & PG | Way2PG` : 'Find Student Accommodation, PG & Hostels in India | Way2PG'}</title>
+        <meta name="description" content={getMetaDescription()} />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href={window.location.href.split('?')[0]} />
+        
+        {/* Open Graph tags for social sharing */}
+        <meta property="og:title" content={searchTerm ? `${searchTerm} Accommodations & PG | Way2PG` : 'Find Student Accommodation, PG & Hostels in India | Way2PG'} />
+        <meta property="og:description" content={getMetaDescription()} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={window.location.href} />
+        <meta property="og:site_name" content="Way2PG" />
+        
+        {/* Twitter Card tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={searchTerm ? `${searchTerm} Accommodations & PG | Way2PG` : 'Find Student Accommodation, PG & Hostels in India | Way2PG'} />
+        <meta name="twitter:description" content={getMetaDescription()} />
+        
+        {/* Additional SEO meta tags */}
+        <meta name="keywords" content="student accommodation, PG accommodation, hostels, student housing, paying guest, affordable PG, verified PG, student PG, college accommodation" />
+        <meta name="author" content="Way2PG" />
+        <meta name="geo.region" content="IN" />
+        <meta name="geo.placename" content="India" />
+        
+        {/* Structured Data for Rich Snippets */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "RealEstateAgent",
+            "name": "Way2PG",
+            "description": "Find verified student accommodations and PG in India",
+            "url": window.location.href,
+            "areaServed": "IN",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": `${window.location.origin}/accommodations?search={search_term}`
+              },
+              "query-input": "required name=search_term"
+            }
+          })}
+        </script>
+      </Helmet>
       <Navbar />
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
@@ -245,11 +298,21 @@ const AccommodationListPage: React.FC = () => {
                         <span className="text-2xl font-bold text-blue-600">${accommodation.price}</span>
                         <span className="text-gray-500 text-sm">/month</span>
                       </div>
-                      <Link to={`/accommodation/${accommodation.id}`}>
-                        <Button variant="primary" size="small" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors duration-200">
-                          View Details
-                        </Button>
-                      </Link>
+                      <Button 
+                        variant="primary" 
+                        size="small" 
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors duration-200"
+                        onClick={() => {
+                          const token = localStorage.getItem('token');
+                          if (!token) {
+                            setShowAuthPopup(true);
+                          } else {
+                            window.location.href = `/accommodation/${accommodation.id}`;
+                          }
+                        }}
+                      >
+                        View Details
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -259,6 +322,7 @@ const AccommodationListPage: React.FC = () => {
         )}
       </main>
       <Footer />
+      <AuthPopup isOpen={showAuthPopup} onClose={() => setShowAuthPopup(false)} />
     </div>
   );
 };

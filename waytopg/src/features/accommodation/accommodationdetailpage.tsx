@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-// import Header from '../components/Header';
-import Footer from '../components/Footer';
-import Button from './Button';
+import Footer from '@/components/Footer';
+import { Button } from '@/components/ui/Button';
 import { MapPin, Star, Wifi, Tv, Users, Utensils, Car, Snowflake, Sun } from 'lucide-react';
-import Navbar from './navbar';
+import Navbar from '@/components/navbar';
 
 interface Accommodation {
   id: string;
@@ -40,7 +39,7 @@ const AccommodationDetailPage: React.FC = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch(`https://waytopg-backend.onrender.com/api/accommodations/${id}`);
+        const response = await fetch(`https://waytopg-dev.onrender.com/api/accommodations/${id}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch accommodation details');
@@ -302,8 +301,13 @@ const AccommodationDetailPage: React.FC = () => {
                       className="w-full px-3 py-2 bg-white border-0 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
                   </div>
-                  <Button onClick={handleBooking} className="w-full bg-white hover:bg-blue-50 text-blue-600">
-                    Book Now
+                  <Button 
+                    onClick={handleBooking} 
+                    className="w-full bg-white hover:bg-blue-50 text-blue-600 font-semibold tracking-wide"
+                    variant="primary"
+                    size="large"
+                  >
+                    {localStorage.getItem('token') ? 'Book Now' : 'Login to Book'}
                   </Button>
                   <p className="mt-4 text-sm text-blue-200 text-center">Free cancellation up to 48 hours before check-in</p>
                 </div>

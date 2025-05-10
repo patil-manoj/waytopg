@@ -3,9 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Home, MapPin, IndianRupee, Upload, Plus, Minus, Loader, Wifi, Tv, Car, 
   Utensils, Dumbbell, Fan, Snowflake, Bath } from 'lucide-react';
-import Navbar from './navbar';
-import Footer from './Footer';
-import Button from './Button';
+import Footer from '@/components/Footer';
+import Button from '@/components/Button';
+import Navbar from '@/components/navbar';
 
 interface AmenityOption {
   id: string;
@@ -52,7 +52,7 @@ const EditAccommodationPage: React.FC = () => {
           throw new Error('Authentication token not found');
         }
 
-        const response = await fetch(`https://waytopg-backend.onrender.com/api/owner/accommodations/${id}`, {
+        const response = await fetch(`https://waytopg-dev.onrender.com/api/owner/accommodations/${id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -200,7 +200,7 @@ const EditAccommodationPage: React.FC = () => {
         formDataToSend.append('images', newFile);
       });
 
-      const response = await fetch(`https://waytopg-backend.onrender.com/api/owner/accommodations/${id}`, {
+      const response = await fetch(`https://waytopg-dev.onrender.com/api/owner/accommodations/${id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
