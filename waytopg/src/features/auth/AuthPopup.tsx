@@ -69,10 +69,10 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
       const data = await response.json();
       if (response.ok && data.verified) {
         if (isLogin) {
-          // If logging in, submit the form
-          handleSubmit(e);
+          // For login, we don't need OTP verification
+          setStep('details');
         } else {
-          // If signing up, move to details form
+          // For signup, move to details form
           setStep('details');
         }
       } else {
@@ -95,7 +95,14 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
       const endpoint = isLogin ? 'login' : 'signup';
       const body = isLogin 
         ? { phoneNumber, password }
-        : { name, phoneNumber, email, password, role: 'student' };
+        : { 
+            name, 
+            phoneNumber, 
+            email, 
+            password, 
+            role: 'student',
+            isPhoneVerified: true // Since we verified with OTP
+          };
 
       const response = await fetch(`https://waytopg-dev.onrender.com/api/auth/${endpoint}`, {
         method: 'POST',
@@ -103,18 +110,27 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
         body: JSON.stringify(body),
       });
 
-      const data = await response.json();
+      let data;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        data = await response.json();
+      } else {
+        // Handle non-JSON response
+        throw new Error('Server returned non-JSON response');
+      }
 
       if (response.ok) {
+        // Save auth data
         localStorage.setItem('token', data.token);
         localStorage.setItem('userRole', data.role);
         onClose();
-        window.location.reload(); // Reload to update auth state
+        window.location.reload();
       } else {
         setError(data.message || 'An error occurred');
       }
-    } catch {
-      setError('An error occurred. Please try again.');
+    } catch (error) {
+      console.error('Auth error:', error);
+      setError(error instanceof Error ? error.message : 'An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -242,8 +258,8 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {step === 'phone' && (
-            <form onSubmit={handleSendOtp} className="space-y-6">
+          {isLogin ? (
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="group">
                 <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
                   Phone Number
@@ -265,160 +281,6 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              <Button
-                type="submit"
-                variant="primary"
-                size="large"
-                className="w-full bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 text-white py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02]"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center justify-center">
-                    <Loader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
-                    Sending OTP...
-                  </div>
-                ) : (
-                  'Send Verification Code'
-                )}
-              </Button>
-            </form>
-          )}
-
-          {step === 'otp' && (
-            <form onSubmit={handleVerifyOtp} className="space-y-6">
-              <div className="group">
-                <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-1">
-                  Verification Code
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    id="otp"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    required
-                    pattern="[0-9]{6}"
-                    placeholder="Enter 6-digit code"
-                    className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm
-                            focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                            transition-all duration-200 ease-in-out
-                            placeholder:text-gray-400"
-                  />
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                variant="primary"
-                size="large"
-                className="w-full bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 text-white py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02]"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center justify-center">
-                    <Loader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
-                    Verifying...
-                  </div>
-                ) : (
-                  'Verify Code'
-                )}
-              </Button>
-
-              <p className="text-center text-sm text-gray-600">
-                Didn't receive the code?{' '}
-                <button
-                  type="button"
-                  onClick={() => setStep('phone')}
-                  className="text-indigo-600 hover:text-indigo-500 font-medium"
-                >
-                  Try again
-                </button>
-              </p>
-            </form>
-          )}
-
-          {step === 'details' && !isLogin && (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="group">
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Name
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required={!isLogin}
-                    className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm
-                            focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                            transition-all duration-200 ease-in-out
-                            placeholder:text-gray-400"
-                    placeholder="Enter your name"
-                  />
-                </div>
-              </div>
-
-              <div className="group">
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email (Optional)
-                </label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm
-                            focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                            transition-all duration-200 ease-in-out
-                            placeholder:text-gray-400"
-                    placeholder="Enter your email"
-                  />
-                </div>
-              </div>
-
-              <div className="group">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
-                </label>
-                <div className="relative">
-                  <input
-                    type="password"
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm
-                            focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                            transition-all duration-200 ease-in-out
-                            placeholder:text-gray-400"
-                    placeholder={isLogin ? 'Enter your password' : 'Create a password'}
-                  />
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                variant="primary"
-                size="large"
-                className="w-full bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 text-white py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02]"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center justify-center">
-                    <Loader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
-                    Please wait...
-                  </div>
-                ) : (
-                  isLogin ? 'Sign in' : 'Create account'
-                )}
-              </Button>
-            </form>
-          )}
-
-          {step === 'details' && isLogin && (
-            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="group">
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                   Password
@@ -449,13 +311,190 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
                 {isLoading ? (
                   <div className="flex items-center justify-center">
                     <Loader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
-                    Please wait...
+                    Signing in...
                   </div>
                 ) : (
                   'Sign in'
                 )}
               </Button>
             </form>
+          ) : (
+            <>
+              {step === 'phone' && (
+                <form onSubmit={handleSendOtp} className="space-y-6">
+                  <div className="group">
+                    <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone Number
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="tel"
+                        id="phoneNumber"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        required
+                        pattern="^\+?[\d\s-]{10,}$"
+                        placeholder="+91 1234567890"
+                        className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm
+                                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                                transition-all duration-200 ease-in-out
+                                placeholder:text-gray-400"
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="large"
+                    className="w-full bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 text-white py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02]"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center justify-center">
+                        <Loader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
+                        Sending OTP...
+                      </div>
+                    ) : (
+                      'Send Verification Code'
+                    )}
+                  </Button>
+                </form>
+              )}
+
+              {step === 'otp' && (
+                <form onSubmit={handleVerifyOtp} className="space-y-6">
+                  <div className="group">
+                    <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-1">
+                      Verification Code
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        id="otp"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        required
+                        pattern="[0-9]{6}"
+                        placeholder="Enter 6-digit code"
+                        className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm
+                                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                                transition-all duration-200 ease-in-out
+                                placeholder:text-gray-400"
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="large"
+                    className="w-full bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 text-white py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02]"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center justify-center">
+                        <Loader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
+                        Verifying...
+                      </div>
+                    ) : (
+                      'Verify Code'
+                    )}
+                  </Button>
+
+                  <p className="text-center text-sm text-gray-600">
+                    Didn't receive the code?{' '}
+                    <button
+                      type="button"
+                      onClick={() => setStep('phone')}
+                      className="text-indigo-600 hover:text-indigo-500 font-medium"
+                    >
+                      Try again
+                    </button>
+                  </p>
+                </form>
+              )}
+
+              {step === 'details' && (
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="group">
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                      Name
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        id="name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required={!isLogin}
+                        className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm
+                                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                                transition-all duration-200 ease-in-out
+                                placeholder:text-gray-400"
+                        placeholder="Enter your name"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="group">
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                      Email (Optional)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="email"
+                        id="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm
+                                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                                transition-all duration-200 ease-in-out
+                                placeholder:text-gray-400"
+                        placeholder="Enter your email"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="group">
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="password"
+                        id="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm
+                                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                                transition-all duration-200 ease-in-out
+                                placeholder:text-gray-400"
+                        placeholder={isLogin ? 'Enter your password' : 'Create a password'}
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="large"
+                    className="w-full bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 text-white py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02]"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center justify-center">
+                        <Loader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
+                        Please wait...
+                      </div>
+                    ) : (
+                      isLogin ? 'Sign in' : 'Create account'
+                    )}
+                  </Button>
+                </form>
+              )}
+            </>
           )}
 
           <div className="mt-6 text-center">
