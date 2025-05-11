@@ -24,20 +24,27 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
     setError('');
 
     try {
-      // Format phone number to E.164 format
-      let formattedPhoneNumber = phoneNumber.trim();
-      if (!formattedPhoneNumber.startsWith('+')) {
-        formattedPhoneNumber = '+91' + formattedPhoneNumber.replace(/^0/, '');
+      // Ensure phone number is exactly 10 digits
+      const cleanPhoneNumber = phoneNumber.replace(/\D/g, '');
+      if (cleanPhoneNumber.length !== 10) {
+        throw new Error('Phone number must be exactly 10 digits');
       }
-      
+
       // Send OTP via backend API
       const response = await fetch('https://waytopg-dev.onrender.com/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber: formattedPhoneNumber })
+        body: JSON.stringify({ phoneNumber: cleanPhoneNumber })
       });
 
-      const data = await response.json();
+      let data;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        throw new Error('Server returned invalid response');
+      }
+
       if (response.ok) {
         setStep('otp');
       } else {
@@ -57,25 +64,32 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
     setError('');
 
     try {
+      const cleanPhoneNumber = phoneNumber.replace(/\D/g, '');
       const response = await fetch('https://waytopg-dev.onrender.com/api/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber, otp })
+        body: JSON.stringify({
+          phoneNumber: cleanPhoneNumber,
+          otp: otp.trim()
+        })
       });
       
-      const data = await response.json();
-      if (response.ok && data.verified) {
-        if (isLogin) {
-          setStep('details');
-        } else {
-          setStep('details');
-        }
+      let data;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
       } else {
-        throw new Error('Invalid OTP');
+        throw new Error('Server returned invalid response');
+      }
+
+      if (response.ok && data.verified) {
+        setStep('details');
+      } else {
+        throw new Error(data.message || 'Invalid OTP');
       }
     } catch (error) {
       console.error('Error verifying OTP:', error);
-      setError('Invalid OTP. Please try again.');
+      setError(error instanceof Error ? error.message : 'Failed to verify OTP. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -88,11 +102,12 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
 
     try {
       const endpoint = isLogin ? 'login' : 'signup';
+      const cleanPhoneNumber = phoneNumber.replace(/\D/g, '');
       const body = isLogin 
-        ? { phoneNumber, password }
+        ? { phoneNumber: cleanPhoneNumber, password }
         : { 
             name, 
-            phoneNumber, 
+            phoneNumber: cleanPhoneNumber, 
             email, 
             password,
             role: 'student',
@@ -243,8 +258,10 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
                   id="phoneNumber"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  pattern="^\+?[\d\s-]{10,}$"
-                  placeholder="+91 1234567890"
+                  pattern="[0-9]{10}"
+                  placeholder="1234567890"
+                  maxLength={10}
+                  minLength={10}
                   required
                   className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
                 />
