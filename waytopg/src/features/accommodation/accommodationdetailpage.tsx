@@ -94,7 +94,7 @@ const AccommodationDetailPage: React.FC = () => {
         return;
       }
 
-      const response = await fetch('https://waytopg-dev.onrender.com/api/student/book', {
+      const response = await fetch('https://waytopg-backend.onrender.com/api/student/book', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
