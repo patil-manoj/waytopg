@@ -159,19 +159,9 @@ const AccommodationListPage: React.FC = () => {
         </script>
       </Helmet>
       <Navbar />
-      <main className="flex-grow container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-center text-gray-800">Find Your Perfect Accommodation</h1>
-          <Button 
-            onClick={fetchAccommodations}
-            variant="primary"
-            size="small"
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            {loading ? 'Refreshing...' : 'Refresh'}
-          </Button>
+      <main className="flex-grow container mx-auto px-4 py-4 sm:py-8">
+        <div className="mb-8">
+          <h1 className="text-2xl sm:text-4xl font-bold text-center sm:text-left text-gray-800">Find Your Perfect Accommodation</h1>
         </div>
 
         {error && (
@@ -188,12 +178,12 @@ const AccommodationListPage: React.FC = () => {
           </div>
         )}
         
-        <div className="mb-8 bg-white px-6 py-4 rounded-2xl shadow-lg backdrop-blur-sm bg-opacity-90">
-          <div className="flex flex-wrap md:flex-nowrap items-center gap-4">
-            <div className="relative flex-1 min-w-0 md:max-w-[40%]">
+        <div className="mb-8 bg-white px-4 sm:px-6 py-4 rounded-2xl shadow-lg backdrop-blur-sm bg-opacity-90">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="relative w-full sm:flex-1 sm:min-w-0 sm:max-w-[40%]">
               <input
                 type="text"
-                placeholder="Search by location, property name..."
+                placeholder="Search location or property..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
@@ -204,7 +194,7 @@ const AccommodationListPage: React.FC = () => {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="flex-none w-full md:w-48 px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="w-full sm:w-48 px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             >
               <option value="">All Types</option>
               <option value="Apartment">Apartment</option>
@@ -214,7 +204,7 @@ const AccommodationListPage: React.FC = () => {
               <option value="House">House</option>
             </select>
 
-            <div className="flex items-center gap-4 flex-1 min-w-0">
+            <div className="w-full sm:flex-1 flex items-center gap-2 sm:gap-4 min-w-0">
               <input
                 type="range"
                 min="0"
@@ -231,6 +221,17 @@ const AccommodationListPage: React.FC = () => {
               <span className="flex-none whitespace-nowrap text-sm font-semibold text-blue-600">
                 ₹{priceRange[1]}<span className="text-gray-500 font-normal">/mo</span>
               </span>
+              <Button 
+                onClick={fetchAccommodations}
+                variant="primary"
+                size="small"
+                disabled={loading}
+                className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full p-0"
+                title={loading ? 'Refreshing...' : 'Refresh listings'}
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                <span className="sr-only">{loading ? 'Refreshing...' : 'Refresh'}</span>
+              </Button>
             </div>
           </div>
         </div>

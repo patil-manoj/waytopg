@@ -1,17 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import Button from '@/components/Button';
 import { Loader } from 'lucide-react';
-import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import axios from '@/utils/api/axios';
 
 interface PhoneSignupFormProps {
   onVerificationComplete: (phoneNumber: string, isVerified: boolean) => void;
-}
-
-declare global {
-  interface Window {
-    recaptchaVerifier?: RecaptchaVerifier;
-  }
 }
 
 const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplete }) => {
@@ -20,55 +13,9 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const verifierRef = useRef<RecaptchaVerifier | null>(null);
-  const [confirmationResult, setConfirmationResult] = useState<import('firebase/auth').ConfirmationResult | null>(null);
-
-  useEffect(() => {
-    // Clean up any existing reCAPTCHA
-    if (verifierRef.current) {
-      verifierRef.current.clear();
-      verifierRef.current = null;
-    }
-
-    // Initialize reCAPTCHA verifier
-    try {
-      const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'normal',
-        'callback': () => {
-          console.log('reCAPTCHA solved, enabling send OTP button');
-        },
-        'expired-callback': () => {
-          console.log('reCAPTCHA expired');
-          setError('reCAPTCHA expired. Please solve it again.');
-          if (verifierRef.current) {
-            verifierRef.current.clear();
-            verifierRef.current = null;
-          }
-        }
-      });
-
-      verifierRef.current = verifier;
-      verifier.render(); // Explicitly render the reCAPTCHA
-    } catch (error) {
-      console.error('Error initializing reCAPTCHA:', error);
-      setError('Error initializing reCAPTCHA. Please refresh the page.');
-    }
-
-    return () => {
-      if (verifierRef.current) {
-        verifierRef.current.clear();
-        verifierRef.current = null;
-      }
-    };
-  }, []);
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!verifierRef.current) {
-      setError('Please wait for reCAPTCHA to load or refresh the page');
-      return;
-    }
-
     setIsLoading(true);
     setError('');
 
@@ -79,41 +26,15 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
         formattedPhoneNumber = '+91' + formattedPhoneNumber.replace(/^0/, '');
       }
       
-      console.log('Sending OTP to:', formattedPhoneNumber);
-
-      const confirmation = await signInWithPhoneNumber(auth, formattedPhoneNumber, verifierRef.current);
-      setConfirmationResult(confirmation);
+      // Send OTP via your backend API
+      await axios.post('/api/auth/send-otp', { phoneNumber: formattedPhoneNumber });
       setStep('otp');
-      console.log('OTP sent successfully');
     } catch (error) {
       console.error('Error sending OTP:', error);
       if (error instanceof Error) {
         setError(error.message);
       } else {
         setError('Failed to send OTP. Please try again.');
-      }
-      
-      // Reinitialize reCAPTCHA on error
-      if (verifierRef.current) {
-        verifierRef.current.clear();
-        verifierRef.current = null;
-      }
-      
-      try {
-        const newVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          'size': 'normal',
-          'callback': () => {
-            console.log('reCAPTCHA solved');
-          },
-          'expired-callback': () => {
-            setError('reCAPTCHA expired. Please try again.');
-          }
-        });
-        verifierRef.current = newVerifier;
-        newVerifier.render();
-      } catch (recaptchaError) {
-        console.error('Error reinitializing reCAPTCHA:', recaptchaError);
-        setError('Error reinitializing reCAPTCHA. Please refresh the page.');
       }
     } finally {
       setIsLoading(false);
@@ -122,18 +43,20 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!confirmationResult) {
-      setError('Please request OTP first');
-      return;
-    }
-
     setIsLoading(true);
     setError('');
 
     try {
-      const credential = await confirmationResult.confirm(otp);
-      if (credential.user) {
+      // Verify OTP via your backend API
+      const response = await axios.post('/api/auth/verify-otp', {
+        phoneNumber,
+        otp
+      });
+      
+      if (response.data.verified) {
         onVerificationComplete(phoneNumber, true);
+      } else {
+        throw new Error('OTP verification failed');
       }
     } catch (error) {
       console.error('Error verifying OTP:', error);
@@ -199,43 +122,23 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
           {error && (
             <div className="text-red-600 text-sm">{error}</div>
           )}
-          <div className="flex gap-3">
-            <Button
-              type="button"
-              variant="secondary"
-              size="large"
-              onClick={() => setStep('phone')}
-              className="flex-1"
-            >
-              Back
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              size="large"
-              className="flex-1"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader className="animate-spin h-5 w-5 mx-auto" />
-              ) : (
-                'Verify OTP'
-              )}
-            </Button>
-          </div>
-          <button
-            type="button"
-            onClick={handleSendOtp}
+          <Button
+            type="submit"
+            variant="primary"
+            size="large"
+            className="w-full"
             disabled={isLoading}
-            className="w-full text-sm text-blue-600 hover:text-blue-500 mt-2 disabled:text-gray-400 disabled:hover:text-gray-400"
           >
-            Didn't receive OTP? Resend
-          </button>
+            {isLoading ? (
+              <Loader className="animate-spin h-5 w-5 mx-auto" />
+            ) : (
+              'Verify OTP'
+            )}
+          </Button>
         </form>
       )}
-      <div id="recaptcha-container" className="mt-4"></div>
     </div>
   );
-};
+}
 
 export default PhoneSignupForm;

@@ -80,6 +80,28 @@ router.get('/accommodations', auth, requireRole(['owner']), async (req, res) => 
   }
 });
 
+// Get all bookings for owner's accommodations
+router.get('/bookings', auth, requireRole(['owner']), async (req, res) => {
+  try {
+    // First get all accommodations owned by this user
+    const accommodations = await Accommodation.find({ owner: req.user._id });
+    const accommodationIds = accommodations.map(acc => acc._id);
+
+    // Then get all bookings for these accommodations
+    const bookings = await Booking.find({
+      accommodation: { $in: accommodationIds }
+    })
+    .populate('accommodation', 'name address images')
+    .populate('student', 'name email phoneNumber')
+    .sort({ createdAt: -1 });
+
+    res.json(bookings);
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+    res.status(500).json({ message: 'Error fetching bookings' });
+  }
+});
+
 router.delete('/accommodations/:id', auth, requireRole(['owner']), async (req, res) => {
   try {
     const accommodation = await Accommodation.findOne({ 

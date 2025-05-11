@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Home, MapPin, IndianRupee, Upload, Plus, Minus, Loader, Wifi, Tv, Car, 
-  Utensils, Dumbbell, Fan, Snowflake, Bath } from 'lucide-react';
+  Utensils, Dumbbell, Fan, Snowflake, Bath, Wind, ShieldCheck, BookOpen, Package,
+  Zap, ArrowUpDown, Video } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Button from '@/components/Button';
 import Navbar from '@/components/navbar';
@@ -22,6 +23,14 @@ const amenityOptions: AmenityOption[] = [
   { id: 'ac', label: 'Air Conditioning', icon: Snowflake },
   { id: 'fan', label: 'Fan', icon: Fan },
   { id: 'bathroom', label: 'Attached Bathroom', icon: Bath },
+  { id: 'laundry', label: 'Laundry', icon: Wind },
+  { id: 'security', label: 'Security', icon: ShieldCheck },
+  { id: 'study-table', label: 'Study Table', icon: BookOpen },
+  { id: 'cupboard', label: 'Cupboard', icon: Package },
+  { id: 'balcony', label: 'Balcony', icon: Home },
+  { id: 'power-backup', label: 'Power Backup', icon: Zap },
+  { id: 'elevator', label: 'Elevator', icon: ArrowUpDown },
+  { id: 'cctv', label: 'CCTV', icon: Video },
 ];
 
 const EditAccommodationPage: React.FC = () => {
@@ -225,30 +234,30 @@ const EditAccommodationPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-blue-50 to-white flex flex-col">
       <Navbar />
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="flex-grow container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="max-w-4xl mx-auto"
         >
-          <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">Edit Accommodation</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 sm:mb-8 text-center">Edit Accommodation</h1>
           
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6" role="alert">
-              <span className="block sm:inline">{error}</span>
+            <div className="bg-red-100 border border-red-400 text-red-700 px-3 sm:px-4 py-3 rounded mb-6" role="alert">
+              <span className="text-sm sm:text-base block">{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
             {/* Basic Information */}
-            <div className="bg-white p-6 rounded-xl shadow-md space-y-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-                <Home className="w-5 h-5 mr-2 text-green-600" />
+            <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md space-y-4 sm:space-y-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center">
+                <Home className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-green-600" />
                 Basic Information
               </h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                     Accommodation Name
@@ -299,13 +308,13 @@ const EditAccommodationPage: React.FC = () => {
             </div>
 
             {/* Location */}
-            <div className="bg-white p-6 rounded-xl shadow-md space-y-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-                <MapPin className="w-5 h-5 mr-2 text-green-600" />
+            <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md space-y-4 sm:space-y-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center">
+                <MapPin className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-green-600" />
                 Location
               </h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
                     Address
@@ -382,9 +391,9 @@ const EditAccommodationPage: React.FC = () => {
             </div>
 
             {/* Amenities */}
-            <div className="bg-white p-6 rounded-xl shadow-md">
-              <h2 className="text-xl font-semibold text-gray-800 mb-6">Amenities</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 sm:mb-6">Amenities</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                 {amenityOptions.map((amenity) => {
                   const Icon = amenity.icon;
                   const isSelected = formData.amenities.includes(amenity.id);
@@ -408,22 +417,22 @@ const EditAccommodationPage: React.FC = () => {
             </div>
 
             {/* House Rules */}
-            <div className="bg-white p-6 rounded-xl shadow-md">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-800">House Rules</h2>
+            <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-800">House Rules</h2>
                 <Button
                   type="button"
                   variant="secondary"
                   size="small"
                   onClick={handleAddRule}
-                  className="flex items-center"
+                  className="w-full sm:w-auto flex items-center justify-center"
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   Add Rule
                 </Button>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {formData.rules.map((rule, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <input
@@ -449,14 +458,13 @@ const EditAccommodationPage: React.FC = () => {
             </div>
 
             {/* Images */}
-            <div className="bg-white p-6 rounded-xl shadow-md">
-              <h2 className="text-xl font-semibold text-gray-800 mb-6">Images</h2>
+            <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 sm:mb-6">Images</h2>
               
-              {/* Existing Images */}
               {existingImages.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-medium text-gray-700 mb-4">Current Images</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="mb-4 sm:mb-6">
+                  <h3 className="text-base sm:text-lg font-medium text-gray-700 mb-3 sm:mb-4">Current Images</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                     {existingImages.map((image, index) => (
                       <div key={index} className="relative group">
                         <img
@@ -477,8 +485,7 @@ const EditAccommodationPage: React.FC = () => {
                 </div>
               )}
 
-              {/* New Images Upload */}
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <div className="flex justify-center px-6 pt-5 pb-6 border-2 border-dashed border-gray-300 rounded-lg">
                   <div className="space-y-1 text-center">
                     <Upload className="mx-auto h-12 w-12 text-gray-400" />
@@ -501,7 +508,7 @@ const EditAccommodationPage: React.FC = () => {
 
                 {/* New Images Preview */}
                 {images.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 mt-4">
                     {images.map((image, index) => (
                       <div key={index} className="relative group">
                         <img
@@ -530,7 +537,7 @@ const EditAccommodationPage: React.FC = () => {
                 variant="primary"
                 size="large"
                 disabled={isLoading}
-                className="min-w-[200px]"
+                className="w-full sm:w-auto min-w-[200px]"
               >
                 {isLoading ? (
                   <>

@@ -2,6 +2,7 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { HelmetProvider } from 'react-helmet-async';
+import ScrollToTop from "@/components/ScrollToTop";
 
 // Page components
 import HomePage from "@/components/home";
@@ -18,6 +19,7 @@ const AccommodationListPage = lazy(() => import("@/features/accommodation/accomm
 const AccommodationDetailPage = lazy(() => import("@/features/accommodation/accommodationdetailpage"));
 const AddAccommodationPage = lazy(() => import("@/features/accommodation/addaccommodation"));
 const EditAccommodationPage = lazy(() => import("@/features/accommodation/editaccommodation"));
+const OwnerBookings = lazy(() => import("@/features/owner/ownerbookings"));
 
 // Other components
 const AboutPage = lazy(() => import("@/components/about"));
@@ -28,6 +30,7 @@ function App() {
   return (
     <HelmetProvider>
       <Router>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<HomePage />} />
           {/* All other routes with Suspense */}
@@ -94,6 +97,14 @@ function App() {
                     element={
                       <ProtectedRoute allowedRoles={["owner","admin"]}>
                         <EditAccommodationPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="owner/bookings"
+                    element={
+                      <ProtectedRoute allowedRoles={["owner"]}>
+                        <OwnerBookings />
                       </ProtectedRoute>
                     }
                   />
