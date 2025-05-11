@@ -60,19 +60,14 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
       const response = await fetch('https://waytopg-dev.onrender.com/api/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phoneNumber,
-          otp
-        })
+        body: JSON.stringify({ phoneNumber, otp })
       });
       
       const data = await response.json();
       if (response.ok && data.verified) {
         if (isLogin) {
-          // For login, we don't need OTP verification
           setStep('details');
         } else {
-          // For signup, move to details form
           setStep('details');
         }
       } else {
@@ -99,9 +94,9 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
             name, 
             phoneNumber, 
             email, 
-            password, 
+            password,
             role: 'student',
-            isPhoneVerified: true // Since we verified with OTP
+            isPhoneVerified: true
           };
 
       const response = await fetch(`https://waytopg-dev.onrender.com/api/auth/${endpoint}`, {
@@ -110,17 +105,9 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
         body: JSON.stringify(body),
       });
 
-      let data;
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-        data = await response.json();
-      } else {
-        // Handle non-JSON response
-        throw new Error('Server returned non-JSON response');
-      }
+      const data = await response.json();
 
       if (response.ok) {
-        // Save auth data
         localStorage.setItem('token', data.token);
         localStorage.setItem('userRole', data.role);
         onClose();
@@ -234,281 +221,146 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
               </svg>
             </div>
             <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-sky-500 mb-2">
-              {isLogin ? 'Welcome back!' : 'Join WayToPG'}
+              {isLogin ? 'Welcome Back!' : 'Create Account'}
             </h2>
             <p className="text-gray-600">
-              {step === 'phone'
-                ? 'Enter your phone number to continue'
-                : step === 'otp'
-                ? 'Enter the verification code'
-                : isLogin
-                ? 'Sign in to find your perfect PG accommodation'
-                : 'Create an account to start your PG journey'}
+              {isLogin ? 'Sign in to access your account' : 'Register to get started'}
             </p>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-              <p className="text-sm text-red-600 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                {error}
-              </p>
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+              {error}
             </div>
           )}
 
-          {isLogin ? (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="group">
-                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number
-                </label>
-                <div className="relative">
-                  <input
-                    type="tel"
-                    id="phoneNumber"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    required
-                    pattern="^\+?[\d\s-]{10,}$"
-                    placeholder="+91 1234567890"
-                    className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm
-                            focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                            transition-all duration-200 ease-in-out
-                            placeholder:text-gray-400"
-                  />
-                </div>
+          {step === 'phone' && (
+            <form onSubmit={handleSendOtp} className="space-y-4">
+              <div>
+                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
+                <input
+                  type="tel"
+                  id="phoneNumber"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  pattern="^\+?[\d\s-]{10,}$"
+                  placeholder="+91 1234567890"
+                  required
+                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
+                />
               </div>
-
-              <div className="group">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
-                </label>
-                <div className="relative">
-                  <input
-                    type="password"
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm
-                            focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                            transition-all duration-200 ease-in-out
-                            placeholder:text-gray-400"
-                    placeholder="Enter your password"
-                  />
-                </div>
-              </div>
-
               <Button
                 type="submit"
-                variant="primary"
-                size="large"
-                className="w-full bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 text-white py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02]"
+                className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white py-2 rounded-md hover:from-indigo-600 hover:to-blue-600 transition-all duration-200"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
-                    <Loader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
-                    Signing in...
+                    <Loader className="animate-spin -ml-1 mr-3 h-5 w-5" />
+                    <span>Sending OTP...</span>
                   </div>
                 ) : (
-                  'Sign in'
+                  'Send OTP'
                 )}
               </Button>
             </form>
-          ) : (
-            <>
-              {step === 'phone' && (
-                <form onSubmit={handleSendOtp} className="space-y-6">
-                  <div className="group">
-                    <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                      Phone Number
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="tel"
-                        id="phoneNumber"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        required
-                        pattern="^\+?[\d\s-]{10,}$"
-                        placeholder="+91 1234567890"
-                        className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm
-                                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                                transition-all duration-200 ease-in-out
-                                placeholder:text-gray-400"
-                      />
-                    </div>
-                  </div>
+          )}
 
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    size="large"
-                    className="w-full bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 text-white py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02]"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <div className="flex items-center justify-center">
-                        <Loader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
-                        Sending OTP...
-                      </div>
-                    ) : (
-                      'Send Verification Code'
-                    )}
-                  </Button>
-                </form>
+          {step === 'otp' && (
+            <form onSubmit={handleVerifyOtp} className="space-y-4">
+              <div>
+                <label htmlFor="otp" className="block text-sm font-medium text-gray-700">Enter OTP</label>
+                <input
+                  type="text"
+                  id="otp"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  required
+                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
+                />
+              </div>
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white py-2 rounded-md hover:from-indigo-600 hover:to-blue-600 transition-all duration-200"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <Loader className="animate-spin -ml-1 mr-3 h-5 w-5" />
+                    <span>Verifying...</span>
+                  </div>
+                ) : (
+                  'Verify OTP'
+                )}
+              </Button>
+            </form>
+          )}
+
+          {step === 'details' && (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {!isLogin && (
+                <>
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
+                    <input
+                      type="text"
+                      id="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                      className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email (Optional)</label>
+                    <input
+                      type="email"
+                      id="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
+                    />
+                  </div>
+                </>
               )}
-
-              {step === 'otp' && (
-                <form onSubmit={handleVerifyOtp} className="space-y-6">
-                  <div className="group">
-                    <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-1">
-                      Verification Code
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        id="otp"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        required
-                        pattern="[0-9]{6}"
-                        placeholder="Enter 6-digit code"
-                        className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm
-                                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                                transition-all duration-200 ease-in-out
-                                placeholder:text-gray-400"
-                      />
-                    </div>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
+                />
+              </div>
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white py-2 rounded-md hover:from-indigo-600 hover:to-blue-600 transition-all duration-200"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <Loader className="animate-spin -ml-1 mr-3 h-5 w-5" />
+                    <span>{isLogin ? 'Signing in...' : 'Creating account...'}</span>
                   </div>
-
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    size="large"
-                    className="w-full bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 text-white py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02]"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <div className="flex items-center justify-center">
-                        <Loader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
-                        Verifying...
-                      </div>
-                    ) : (
-                      'Verify Code'
-                    )}
-                  </Button>
-
-                  <p className="text-center text-sm text-gray-600">
-                    Didn't receive the code?{' '}
-                    <button
-                      type="button"
-                      onClick={() => setStep('phone')}
-                      className="text-indigo-600 hover:text-indigo-500 font-medium"
-                    >
-                      Try again
-                    </button>
-                  </p>
-                </form>
-              )}
-
-              {step === 'details' && (
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="group">
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                      Name
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        id="name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required={!isLogin}
-                        className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm
-                                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                                transition-all duration-200 ease-in-out
-                                placeholder:text-gray-400"
-                        placeholder="Enter your name"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="group">
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                      Email (Optional)
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="email"
-                        id="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm
-                                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                                transition-all duration-200 ease-in-out
-                                placeholder:text-gray-400"
-                        placeholder="Enter your email"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="group">
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="password"
-                        id="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm
-                                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                                transition-all duration-200 ease-in-out
-                                placeholder:text-gray-400"
-                        placeholder={isLogin ? 'Enter your password' : 'Create a password'}
-                      />
-                    </div>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    size="large"
-                    className="w-full bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 text-white py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02]"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <div className="flex items-center justify-center">
-                        <Loader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
-                        Please wait...
-                      </div>
-                    ) : (
-                      isLogin ? 'Sign in' : 'Create account'
-                    )}
-                  </Button>
-                </form>
-              )}
-            </>
+                ) : (
+                  isLogin ? 'Sign In' : 'Create Account'
+                )}
+              </Button>
+            </form>
           )}
 
           <div className="mt-6 text-center">
             <button
               onClick={() => {
-                setError('');
                 setIsLogin(!isLogin);
                 setStep('phone');
+                setError('');
               }}
-              className="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
+              className="text-sm text-indigo-600 hover:text-indigo-500"
             >
-              {isLogin
-                ? "Don't have an account? Sign up"
-                : 'Already have an account? Sign in'}
+              {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
             </button>
           </div>
         </div>
