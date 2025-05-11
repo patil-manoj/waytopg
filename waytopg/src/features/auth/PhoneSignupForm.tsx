@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import Button from '@/components/Button';
 import { Loader } from 'lucide-react';
-import axios from '@/utils/api/axios';
+import { auth } from '@/lib/firebase';
+import { signInWithPhoneNumber } from 'firebase/auth';
 
 interface PhoneSignupFormProps {
   onVerificationComplete: (phoneNumber: string, isVerified: boolean) => void;
@@ -13,6 +14,7 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [confirmationResult, setConfirmationResult] = useState<import('firebase/auth').ConfirmationResult | null>(null);
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,9 +27,10 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
       if (!formattedPhoneNumber.startsWith('+')) {
         formattedPhoneNumber = '+91' + formattedPhoneNumber.replace(/^0/, '');
       }
-      
-      // Send OTP via your backend API
-      await axios.post('/api/auth/send-otp', { phoneNumber: formattedPhoneNumber });
+
+      // Send OTP via Firebase
+      const confirmation = await signInWithPhoneNumber(auth, formattedPhoneNumber);
+      setConfirmationResult(confirmation);
       setStep('otp');
     } catch (error) {
       console.error('Error sending OTP:', error);
@@ -47,20 +50,22 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
     setError('');
 
     try {
-      // Verify OTP via your backend API
-      const response = await axios.post('/api/auth/verify-otp', {
-        phoneNumber,
-        otp
-      });
-      
-      if (response.data.verified) {
-        onVerificationComplete(phoneNumber, true);
-      } else {
-        throw new Error('OTP verification failed');
+      if (!confirmationResult) {
+        throw new Error('No verification code was sent');
       }
+
+      // Verify OTP
+      await confirmationResult.confirm(otp);
+      
+      // Successfully verified
+      onVerificationComplete(phoneNumber, true);
     } catch (error) {
       console.error('Error verifying OTP:', error);
-      setError('Invalid OTP. Please try again.');
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Invalid OTP. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -79,8 +84,10 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
               id="phoneNumber"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              pattern="^\+?[\d\s-]{10,}$"
-              placeholder="+91 1234567890"
+              pattern="[0-9]{10}"
+              maxLength={10}
+              minLength={10}
+              placeholder="1234567890"
               required
               className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
             />
