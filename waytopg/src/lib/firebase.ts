@@ -1,8 +1,7 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, PhoneAuthProvider } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
-  // Replace with your Firebase config
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
@@ -11,6 +10,6 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-export const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const phoneProvider = new PhoneAuthProvider(auth);
+// Initialize Firebase only if API key is available
+export const app = firebaseConfig.apiKey ? initializeApp(firebaseConfig) : null;
+export const auth = app ? getAuth(app) : null;

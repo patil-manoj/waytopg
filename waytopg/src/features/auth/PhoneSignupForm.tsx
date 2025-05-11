@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import Button from '@/components/Button';
 import { Loader } from 'lucide-react';
-import { auth } from '@/lib/firebase';
-import { signInWithPhoneNumber } from 'firebase/auth';
 
 interface PhoneSignupFormProps {
   onVerificationComplete: (phoneNumber: string, isVerified: boolean) => void;
@@ -14,7 +12,6 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [confirmationResult, setConfirmationResult] = useState<import('firebase/auth').ConfirmationResult | null>(null);
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,15 +19,24 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
     setError('');
 
     try {
-      // Format phone number to E.164 format
-      let formattedPhoneNumber = phoneNumber.trim();
-      if (!formattedPhoneNumber.startsWith('+')) {
-        formattedPhoneNumber = '+91' + formattedPhoneNumber.replace(/^0/, '');
+      // Format phone number
+      const formattedPhoneNumber = phoneNumber.trim().replace(/\D/g, '');
+      if (formattedPhoneNumber.length !== 10) {
+        throw new Error('Phone number must be exactly 10 digits');
       }
 
-      // Send OTP via Firebase
-      const confirmation = await signInWithPhoneNumber(auth, formattedPhoneNumber);
-      setConfirmationResult(confirmation);
+      // Send OTP via backend API
+      const response = await fetch('https://waytopg-dev.onrender.com/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber: formattedPhoneNumber })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to send OTP');
+      }
+
       setStep('otp');
     } catch (error) {
       console.error('Error sending OTP:', error);
@@ -50,15 +56,26 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
     setError('');
 
     try {
-      if (!confirmationResult) {
-        throw new Error('No verification code was sent');
+      const formattedPhoneNumber = phoneNumber.trim().replace(/\D/g, '');
+      const response = await fetch('https://waytopg-dev.onrender.com/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phoneNumber: formattedPhoneNumber,
+          otp: otp.trim()
+        })
+      });
+      
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Invalid OTP');
       }
 
-      // Verify OTP
-      await confirmationResult.confirm(otp);
-      
-      // Successfully verified
-      onVerificationComplete(phoneNumber, true);
+      if (data.verified) {
+        onVerificationComplete(formattedPhoneNumber, true);
+      } else {
+        throw new Error('Verification failed');
+      }
     } catch (error) {
       console.error('Error verifying OTP:', error);
       if (error instanceof Error) {
