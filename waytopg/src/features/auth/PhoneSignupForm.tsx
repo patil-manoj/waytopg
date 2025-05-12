@@ -17,29 +17,43 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
     e.preventDefault();
     setIsLoading(true);
     setError('');
-
+    
     try {
-      // Format phone number
+      console.log('Starting OTP send process...');
       const formattedPhoneNumber = phoneNumber.trim().replace(/\D/g, '');
+      console.log('Formatted phone number:', formattedPhoneNumber);
+      
       if (formattedPhoneNumber.length !== 10) {
+        console.error('Phone number validation failed:', formattedPhoneNumber.length, 'digits');
         throw new Error('Phone number must be exactly 10 digits');
       }
 
-      // Send OTP via backend API
+      console.log('Sending OTP request to backend...');
       const response = await fetch('https://waytopg-dev.onrender.com/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phoneNumber: formattedPhoneNumber })
       });
 
+      console.log('Backend response status:', response.status);
       const data = await response.json();
+      console.log('Backend response data:', data);
+
       if (!response.ok) {
+        console.error('Backend error response:', data);
         throw new Error(data.message || 'Failed to send OTP');
       }
 
+      console.log('OTP sent successfully, moving to verification step');
       setStep('otp');
     } catch (error) {
-      console.error('Error sending OTP:', error);
+      console.error('Detailed error in OTP send:', {
+        error,
+        type: error instanceof Error ? 'Error instance' : typeof error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      
       if (error instanceof Error) {
         setError(error.message);
       } else {
@@ -56,28 +70,48 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
     setError('');
 
     try {
+      console.log('Starting OTP verification process...');
       const formattedPhoneNumber = phoneNumber.trim().replace(/\D/g, '');
+      const trimmedOtp = otp.trim();
+      console.log('Verification details:', {
+        phoneNumber: formattedPhoneNumber,
+        otpLength: trimmedOtp.length
+      });
+
+      console.log('Sending verification request to backend...');
       const response = await fetch('https://waytopg-dev.onrender.com/api/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phoneNumber: formattedPhoneNumber,
-          otp: otp.trim()
+          otp: trimmedOtp
         })
       });
       
+      console.log('Verification response status:', response.status);
       const data = await response.json();
+      console.log('Verification response data:', data);
+
       if (!response.ok) {
+        console.error('Backend verification error:', data);
         throw new Error(data.message || 'Invalid OTP');
       }
 
       if (data.verified) {
+        console.log('OTP verification successful');
         onVerificationComplete(formattedPhoneNumber, true);
       } else {
+        console.error('Verification failed without error response');
         throw new Error('Verification failed');
       }
     } catch (error) {
-      console.error('Error verifying OTP:', error);
+      console.error('Detailed error in OTP verification:', {
+        error,
+        type: error instanceof Error ? 'Error instance' : typeof error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      
       if (error instanceof Error) {
         setError(error.message);
       } else {
