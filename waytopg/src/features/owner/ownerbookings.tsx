@@ -37,7 +37,7 @@ const OwnerBookings: React.FC = () => {
 
       setLoading(true);
       setError(null);
-      const response = await fetch('https://waytopg-backend.onrender.com/api/owner/bookings', {
+      const response = await fetch('https://waytopg-dev.onrender.com/api/owner/bookings', {
         headers: {
           'Authorization': `Bearer ${token}`
         }

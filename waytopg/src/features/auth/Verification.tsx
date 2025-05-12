@@ -21,7 +21,7 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ onClose }) => {
       setIsLoading(true);
       setError('');
       const token = localStorage.getItem('token');
-      const response = await fetch('https://waytopg-backend.onrender.com/api/auth/send-email-verification', {
+      const response = await fetch('https://waytopg-dev.onrender.com/api/auth/send-email-verification', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -49,7 +49,7 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ onClose }) => {
       setIsLoading(true);
       setError('');
       const token = localStorage.getItem('token');
-      const response = await fetch('https://waytopg-backend.onrender.com/api/auth/send-phone-verification', {
+      const response = await fetch('https://waytopg-dev.onrender.com/api/auth/send-phone-verification', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -77,7 +77,7 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ onClose }) => {
       setIsLoading(true);
       setError('');
       const token = localStorage.getItem('token');
-      const response = await fetch('https://waytopg-backend.onrender.com/api/auth/verify-email', {
+      const response = await fetch('https://waytopg-dev.onrender.com/api/auth/verify-email', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -106,7 +106,7 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ onClose }) => {
       setIsLoading(true);
       setError('');
       const token = localStorage.getItem('token');
-      const response = await fetch('https://waytopg-backend.onrender.com/api/auth/verify-phone', {
+      const response = await fetch('https://waytopg-dev.onrender.com/api/auth/verify-phone', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -31,7 +31,7 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
       }
 
       // Send OTP via backend API
-      const response = await fetch('https://waytopg-backend.onrender.com/api/auth/send-otp', {
+      const response = await fetch('https://waytopg-dev.onrender.com/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phoneNumber: cleanPhoneNumber })
@@ -114,7 +114,7 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
             isPhoneVerified: true
           };
 
-      const response = await fetch(`https://waytopg-backend.onrender.com/api/auth/${endpoint}`, {
+      const response = await fetch(`https://waytopg-dev.onrender.com/api/auth/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
