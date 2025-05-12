@@ -32,7 +32,7 @@ const amenityOptions: AmenityOption[] = [
   { id: 'power-backup', label: 'Power Backup', icon: Zap },
   { id: 'elevator', label: 'Elevator', icon: ArrowUpDown },
   { id: 'cctv', label: 'CCTV', icon: Video },
-  { id: 'geyser', label: 'Geyser', icon: Heater },
+  { id: 'Water-Heater', label: 'Water Heater', icon: Heater },
 ];
 
 const furnishingOptions = [
