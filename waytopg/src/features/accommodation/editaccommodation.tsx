@@ -61,7 +61,7 @@ const EditAccommodationPage: React.FC = () => {
           throw new Error('Authentication token not found');
         }
 
-        const response = await fetch(`https://waytopg-dev.onrender.com/api/owner/accommodations/${id}`, {
+        const response = await fetch(`https://waytopg-backend.onrender.com/api/owner/accommodations/${id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -209,7 +209,7 @@ const EditAccommodationPage: React.FC = () => {
         formDataToSend.append('images', newFile);
       });
 
-      const response = await fetch(`https://waytopg-dev.onrender.com/api/owner/accommodations/${id}`, {
+      const response = await fetch(`https://waytopg-backend.onrender.com/api/owner/accommodations/${id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

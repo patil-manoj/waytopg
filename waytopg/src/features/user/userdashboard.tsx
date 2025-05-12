@@ -21,7 +21,7 @@ const UserDashboard: React.FC = () => {
 
       setLoading(true);
       setError(null);
-      const response = await fetch('https://waytopg-dev.onrender.com/api/student/bookings', {
+      const response = await fetch('https://waytopg-backend.onrender.com/api/student/bookings', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -52,7 +52,7 @@ const UserDashboard: React.FC = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://waytopg-dev.onrender.com/api/student/bookings/${bookingId}/cancel`, {
+      const response = await fetch(`https://waytopg-backend.onrender.com/api/student/bookings/${bookingId}/cancel`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
