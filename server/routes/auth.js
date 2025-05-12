@@ -46,7 +46,12 @@ router.post('/signup', validateSignup, async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, phoneNumber, email, password, role, companyName, businessRegistration, adminCode } = req.body;
+    let { name, phoneNumber, email, password, role, companyName, businessRegistration, adminCode } = req.body;
+    
+    // Normalize phone number: ensure it starts with +91 and contains only digits after that
+    phoneNumber = phoneNumber.replace(/\D/g, '');
+    phoneNumber = phoneNumber.startsWith('91') ? '+' + phoneNumber : '+91' + phoneNumber;
+    console.log('Normalized phone number for signup:', phoneNumber);
 
     // Check if phone number already exists
     const existingUserByPhone = await User.findOne({ phoneNumber });
@@ -112,8 +117,13 @@ router.post('/login', validateLogin, async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { phoneNumber, password } = req.body;
+    let { phoneNumber, password } = req.body;
     
+    // Normalize phone number: ensure it starts with +91 and contains only digits after that
+    phoneNumber = phoneNumber.replace(/\D/g, '');
+    phoneNumber = phoneNumber.startsWith('91') ? '+' + phoneNumber : '+91' + phoneNumber;
+    console.log('Normalized phone number for login:', phoneNumber);
+
     // Find user by phone number
     const user = await User.findOne({ phoneNumber });
     if (!user) {
@@ -157,8 +167,11 @@ router.post('/check-phone',
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { phoneNumber } = req.body;
-      console.log('Searching for phone number:', phoneNumber);
+      let { phoneNumber } = req.body;
+      // Normalize phone number: ensure it starts with +91 and contains only digits after that
+      phoneNumber = phoneNumber.replace(/\D/g, '');
+      phoneNumber = phoneNumber.startsWith('91') ? '+' + phoneNumber : '+91' + phoneNumber;
+      console.log('Searching for normalized phone number:', phoneNumber);
       
       const existingUser = await User.findOne({ phoneNumber });
       console.log('Database result:', existingUser ? 'User found' : 'No user found');
