@@ -15,10 +15,10 @@ export const authService = {
 
   checkPhoneExists: async (phoneNumber: string): Promise<{ exists: boolean }> => {
     try {
-      await api.post('/auth/check-phone', { phoneNumber });
-      return { exists: true };
+      const response = await api.post('/auth/check-phone', { phoneNumber });
+      return { exists: response.data.exists };
     } catch (error) {
-      if (error instanceof AxiosError && error.response?.status === 404) {
+      if (error instanceof AxiosError) {
         return { exists: false };
       }
       throw error;
