@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import Button from '@/components/Button';
 import { Loader } from 'lucide-react';
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+
+declare global {
+  interface Window {
+    recaptchaVerifier: RecaptchaVerifier;
+  }
+}
 
 interface PhoneSignupFormProps {
   onVerificationComplete: (phoneNumber: string, isVerified: boolean) => void;
@@ -12,6 +20,18 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+
+  const setupRecaptcha = () => {
+    if (!window.recaptchaVerifier && auth) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible',
+        callback: () => {
+          // reCAPTCHA solved, allow signInWithPhoneNumber.
+        },
+      });
+    }
+  };
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,46 +39,29 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
     setError('');
     
     try {
-      console.log('Starting OTP send process...');
-      const formattedPhoneNumber = phoneNumber.trim().replace(/\D/g, '');
-      console.log('Formatted phone number:', formattedPhoneNumber);
+      if (!auth) {
+        throw new Error('Firebase auth is not initialized');
+      }
+
+      const formattedPhoneNumber = '+91' + phoneNumber.trim().replace(/\D/g, '');
       
-      if (formattedPhoneNumber.length !== 10) {
-        console.error('Phone number validation failed:', formattedPhoneNumber.length, 'digits');
+      if (phoneNumber.trim().replace(/\D/g, '').length !== 10) {
         throw new Error('Phone number must be exactly 10 digits');
       }
 
-      console.log('Sending OTP request to backend...');
-      const response = await fetch('https://waytopg-dev.onrender.com/api/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber: formattedPhoneNumber })
-      });
-
-      console.log('Backend response status:', response.status);
-      const data = await response.json();
-      console.log('Backend response data:', data);
-
-      if (!response.ok) {
-        console.error('Backend error response:', data);
-        throw new Error(data.message || 'Failed to send OTP');
-      }
-
-      console.log('OTP sent successfully, moving to verification step');
+      setupRecaptcha();
+      
+      const confirmation = await signInWithPhoneNumber(
+        auth, 
+        formattedPhoneNumber,
+        window.recaptchaVerifier
+      );
+      
+      setConfirmationResult(confirmation);
       setStep('otp');
     } catch (error) {
-      console.error('Detailed error in OTP send:', {
-        error,
-        type: error instanceof Error ? 'Error instance' : typeof error,
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined
-      });
-      
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('Failed to send OTP. Please try again.');
-      }
+      console.error('Error sending OTP:', error);
+      setError(error instanceof Error ? error.message : 'Failed to send OTP');
     } finally {
       setIsLoading(false);
     }
@@ -70,53 +73,20 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
     setError('');
 
     try {
-      console.log('Starting OTP verification process...');
-      const formattedPhoneNumber = phoneNumber.trim().replace(/\D/g, '');
-      const trimmedOtp = otp.trim();
-      console.log('Verification details:', {
-        phoneNumber: formattedPhoneNumber,
-        otpLength: trimmedOtp.length
-      });
-
-      console.log('Sending verification request to backend...');
-      const response = await fetch('https://waytopg-dev.onrender.com/api/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phoneNumber: formattedPhoneNumber,
-          otp: trimmedOtp
-        })
-      });
-      
-      console.log('Verification response status:', response.status);
-      const data = await response.json();
-      console.log('Verification response data:', data);
-
-      if (!response.ok) {
-        console.error('Backend verification error:', data);
-        throw new Error(data.message || 'Invalid OTP');
+      if (!confirmationResult) {
+        throw new Error('Please request OTP first');
       }
 
-      if (data.verified) {
-        console.log('OTP verification successful');
+      const credential = await confirmationResult.confirm(otp);
+      if (credential.user) {
+        const formattedPhoneNumber = phoneNumber.trim().replace(/\D/g, '');
         onVerificationComplete(formattedPhoneNumber, true);
       } else {
-        console.error('Verification failed without error response');
         throw new Error('Verification failed');
       }
     } catch (error) {
-      console.error('Detailed error in OTP verification:', {
-        error,
-        type: error instanceof Error ? 'Error instance' : typeof error,
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined
-      });
-      
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('Invalid OTP. Please try again.');
-      }
+      console.error('Error verifying OTP:', error);
+      setError(error instanceof Error ? error.message : 'Invalid OTP. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -124,6 +94,7 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
 
   return (
     <div className="w-full max-w-md">
+      <div id="recaptcha-container"></div>
       {step === 'phone' ? (
         <form onSubmit={handleSendOtp} className="space-y-4">
           <div>
