@@ -65,7 +65,7 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
 
     try {
       const cleanPhoneNumber = phoneNumber.replace(/\D/g, '');
-      const response = await fetch('https://waytopg-dev.onrender.com/api/auth/verify-otp', {
+      const response = await fetch('https://waytopg-backend.onrender.com/api/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
