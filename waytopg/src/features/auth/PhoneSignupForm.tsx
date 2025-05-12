@@ -50,9 +50,14 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
         throw new Error('Phone number must be exactly 10 digits');
       }
 
+      console.log('Checking phone number:', formattedPhoneNumber);
+      
       // Check if phone number already exists
       const { exists, message } = await authService.checkPhoneExists(formattedPhoneNumber);
+      console.log('Phone check result:', { exists, message });
+      
       if (exists) {
+        console.log('Phone exists, stopping OTP flow');
         throw new Error(message || 'This phone number is already registered. Please login instead.');
       }
 

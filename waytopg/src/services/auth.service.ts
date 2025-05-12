@@ -29,20 +29,38 @@ export const authService = {
 
   checkPhoneExists: async (phoneNumber: string): Promise<{ exists: boolean; message?: string }> => {
     try {
+      console.log('Checking phone number:', phoneNumber);
       const response = await api.post('/auth/check-phone', { phoneNumber });
+      console.log('Server response:', response.data);
+      
+      // When response is 200 but phone exists (shouldn't happen with current server code)
+      if (response.data.exists) {
+        console.log('Phone exists from 200 response');
+        return {
+          exists: true,
+          message: response.data.message || 'This phone number is already registered. Please login instead.'
+        };
+      }
+      
       return { 
-        exists: response.data.exists,
+        exists: false,
         message: response.data.message 
       };
     } catch (error: unknown) {
-      if (error instanceof AxiosError && error.response?.status === 409) {
-        return { 
-          exists: true,
-          message: error.response.data.message 
-        };
-      }
-      if (error instanceof AxiosError && error.response?.status === 400) {
-        throw new Error('Please enter a valid phone number');
+      console.error('Error checking phone:', error);
+      if (error instanceof AxiosError) {
+        console.log('Axios error status:', error.response?.status);
+        console.log('Axios error data:', error.response?.data);
+        
+        if (error.response?.status === 409) {
+          return { 
+            exists: true,
+            message: error.response.data.message 
+          };
+        }
+        if (error.response?.status === 400) {
+          throw new Error('Please enter a valid phone number');
+        }
       }
       if (error instanceof Error) {
         throw error;

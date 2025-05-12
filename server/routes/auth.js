@@ -149,21 +149,29 @@ router.post('/check-phone',
     .withMessage('Please provide a valid phone number'),
   async (req, res) => {
     try {
+      console.log('Received check-phone request:', req.body);
+      
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log('Validation errors:', errors.array());
         return res.status(400).json({ errors: errors.array() });
       }
 
       const { phoneNumber } = req.body;
+      console.log('Searching for phone number:', phoneNumber);
+      
       const existingUser = await User.findOne({ phoneNumber });
+      console.log('Database result:', existingUser ? 'User found' : 'No user found');
       
       if (existingUser) {
+        console.log('Sending 409 response - phone number exists');
         return res.status(409).json({ 
           exists: true, 
           message: 'This phone number is already registered. Please login instead.' 
         });
       }
       
+      console.log('Sending success response - phone number available');
       res.json({ exists: false });
     } catch (error) {
       console.error('Error checking phone number:', error);
