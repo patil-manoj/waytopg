@@ -46,7 +46,12 @@ router.post('/signup', validateSignup, async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, phoneNumber, email, password, role, companyName, businessRegistration, adminCode } = req.body;
+    let { name, phoneNumber, email, password, role, companyName, businessRegistration, adminCode } = req.body;
+    
+    // Normalize phone number: ensure it starts with +91 and contains only digits after that
+    phoneNumber = phoneNumber.replace(/\D/g, '');
+    phoneNumber = phoneNumber.startsWith('91') ? '+' + phoneNumber : '+91' + phoneNumber;
+    console.log('Normalized phone number for signup:', phoneNumber);
 
     // Check if phone number already exists
     const existingUserByPhone = await User.findOne({ phoneNumber });
@@ -112,8 +117,13 @@ router.post('/login', validateLogin, async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { phoneNumber, password } = req.body;
+    let { phoneNumber, password } = req.body;
     
+    // Normalize phone number: ensure it starts with +91 and contains only digits after that
+    phoneNumber = phoneNumber.replace(/\D/g, '');
+    phoneNumber = phoneNumber.startsWith('91') ? '+' + phoneNumber : '+91' + phoneNumber;
+    console.log('Normalized phone number for login:', phoneNumber);
+
     // Find user by phone number
     const user = await User.findOne({ phoneNumber });
     if (!user) {
@@ -142,15 +152,44 @@ router.post('/login', validateLogin, async (req, res) => {
   }
 });
 
-router.post('/check-phone', async (req, res) => {
-  try {
-    const { phoneNumber } = req.body;
-    const existingUser = await User.findOne({ phoneNumber });
-    res.json({ exists: !!existingUser });
-  } catch (error) {
-    console.error('Error checking phone number:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+router.post('/check-phone', 
+  body('phoneNumber')
+    .notEmpty()
+    .matches(/^\+?[\d\s-]{10,}$/)
+    .withMessage('Please provide a valid phone number'),
+  async (req, res) => {
+    try {
+      console.log('Received check-phone request:', req.body);
+      
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        console.log('Validation errors:', errors.array());
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      let { phoneNumber } = req.body;
+      // Normalize phone number: ensure it starts with +91 and contains only digits after that
+      phoneNumber = phoneNumber.replace(/\D/g, '');
+      phoneNumber = phoneNumber.startsWith('91') ? '+' + phoneNumber : '+91' + phoneNumber;
+      console.log('Searching for normalized phone number:', phoneNumber);
+      
+      const existingUser = await User.findOne({ phoneNumber });
+      console.log('Database result:', existingUser ? 'User found' : 'No user found');
+      
+      if (existingUser) {
+        console.log('Sending 409 response - phone number exists');
+        return res.status(409).json({ 
+          exists: true, 
+          message: 'This phone number is already registered. Please login instead.' 
+        });
+      }
+      
+      console.log('Sending success response - phone number available');
+      res.json({ exists: false });
+    } catch (error) {
+      console.error('Error checking phone number:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
 
 export default router;
