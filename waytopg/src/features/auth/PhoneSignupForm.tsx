@@ -3,6 +3,7 @@ import Button from '@/components/Button';
 import { Loader } from 'lucide-react';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { authService } from '@/services/auth.service';
 
 declare global {
   interface Window {
@@ -47,6 +48,12 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
       
       if (phoneNumber.trim().replace(/\D/g, '').length !== 10) {
         throw new Error('Phone number must be exactly 10 digits');
+      }
+
+      // Check if phone number already exists
+      const { exists } = await authService.checkPhoneExists(formattedPhoneNumber);
+      if (exists) {
+        throw new Error('This phone number is already registered. Please login instead.');
       }
 
       setupRecaptcha();

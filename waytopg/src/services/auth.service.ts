@@ -12,6 +12,11 @@ export const authService = {
     return response.data;
   },
 
+  checkPhoneExists: async (phoneNumber: string) => {
+    const response = await api.post('/auth/check-phone', { phoneNumber });
+    return response.data;
+  },
+
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userRole');

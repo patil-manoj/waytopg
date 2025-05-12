@@ -142,4 +142,15 @@ router.post('/login', validateLogin, async (req, res) => {
   }
 });
 
+router.post('/check-phone', async (req, res) => {
+  try {
+    const { phoneNumber } = req.body;
+    const existingUser = await User.findOne({ phoneNumber });
+    res.json({ exists: !!existingUser });
+  } catch (error) {
+    console.error('Error checking phone number:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 export default router;
