@@ -12,13 +12,8 @@ export const authService = {
     return response.data;
   },
 
-  verifyPhone: async (phoneNumber: string, code: string) => {
-    const response = await api.post('/auth/verify-phone', { phoneNumber, code });
-    return response.data;
-  },
-
-  verifyEmail: async (email: string, code: string) => {
-    const response = await api.post('/auth/verify-email', { email, code });
+  checkPhoneExists: async (phoneNumber: string) => {
+    const response = await api.post('/auth/check-phone', { phoneNumber });
     return response.data;
   },
 

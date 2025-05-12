@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
 import Button from '@/components/Button';
 import { Loader } from 'lucide-react';
-import axios from '@/utils/api/axios';
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { authService } from '@/services/auth.service';
+
+declare global {
+  interface Window {
+    recaptchaVerifier: RecaptchaVerifier;
+  }
+}
 
 interface PhoneSignupFormProps {
   onVerificationComplete: (phoneNumber: string, isVerified: boolean) => void;
@@ -13,29 +21,54 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+
+  const setupRecaptcha = () => {
+    if (!window.recaptchaVerifier && auth) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible',
+        callback: () => {
+          // reCAPTCHA solved, allow signInWithPhoneNumber.
+        },
+      });
+    }
+  };
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-
+    
     try {
-      // Format phone number to E.164 format
-      let formattedPhoneNumber = phoneNumber.trim();
-      if (!formattedPhoneNumber.startsWith('+')) {
-        formattedPhoneNumber = '+91' + formattedPhoneNumber.replace(/^0/, '');
+      if (!auth) {
+        throw new Error('Firebase auth is not initialized');
       }
+
+      const formattedPhoneNumber = '+91' + phoneNumber.trim().replace(/\D/g, '');
       
-      // Send OTP via your backend API
-      await axios.post('/api/auth/send-otp', { phoneNumber: formattedPhoneNumber });
+      if (phoneNumber.trim().replace(/\D/g, '').length !== 10) {
+        throw new Error('Phone number must be exactly 10 digits');
+      }
+
+      // Check if phone number already exists
+      const { exists } = await authService.checkPhoneExists(formattedPhoneNumber);
+      if (exists) {
+        throw new Error('This phone number is already registered. Please login instead.');
+      }
+
+      setupRecaptcha();
+      
+      const confirmation = await signInWithPhoneNumber(
+        auth, 
+        formattedPhoneNumber,
+        window.recaptchaVerifier
+      );
+      
+      setConfirmationResult(confirmation);
       setStep('otp');
     } catch (error) {
       console.error('Error sending OTP:', error);
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('Failed to send OTP. Please try again.');
-      }
+      setError(error instanceof Error ? error.message : 'Failed to send OTP');
     } finally {
       setIsLoading(false);
     }
@@ -47,20 +80,20 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
     setError('');
 
     try {
-      // Verify OTP via your backend API
-      const response = await axios.post('/api/auth/verify-otp', {
-        phoneNumber,
-        otp
-      });
-      
-      if (response.data.verified) {
-        onVerificationComplete(phoneNumber, true);
+      if (!confirmationResult) {
+        throw new Error('Please request OTP first');
+      }
+
+      const credential = await confirmationResult.confirm(otp);
+      if (credential.user) {
+        const formattedPhoneNumber = phoneNumber.trim().replace(/\D/g, '');
+        onVerificationComplete(formattedPhoneNumber, true);
       } else {
-        throw new Error('OTP verification failed');
+        throw new Error('Verification failed');
       }
     } catch (error) {
       console.error('Error verifying OTP:', error);
-      setError('Invalid OTP. Please try again.');
+      setError(error instanceof Error ? error.message : 'Invalid OTP. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -68,6 +101,7 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
 
   return (
     <div className="w-full max-w-md">
+      <div id="recaptcha-container"></div>
       {step === 'phone' ? (
         <form onSubmit={handleSendOtp} className="space-y-4">
           <div>
@@ -79,8 +113,10 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
               id="phoneNumber"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              pattern="^\+?[\d\s-]{10,}$"
-              placeholder="+91 1234567890"
+              pattern="[0-9]{10}"
+              maxLength={10}
+              minLength={10}
+              placeholder="1234567890"
               required
               className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
             />

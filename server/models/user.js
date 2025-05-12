@@ -80,16 +80,7 @@ const userSchema = new mongoose.Schema({
   },
   isPhoneVerified: {
     type: Boolean,
-    default: false
-  },
-  emailVerificationCode: {
-    type: String
-  },
-  phoneVerificationCode: {
-    type: String
-  },
-  verificationCodeExpires: {
-    type: Date
+    default: true  // Since we verify with Firebase before creating the user
   }
 }, {
   timestamps: true

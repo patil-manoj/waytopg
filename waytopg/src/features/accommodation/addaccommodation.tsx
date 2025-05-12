@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import imageCompression from 'browser-image-compression';
 import { Home, MapPin, IndianRupee, Upload, Plus, Minus, Loader, Wifi, Tv, Car, 
   Utensils, Dumbbell, Fan, Snowflake, Bath, Wind, ShieldCheck, BookOpen, Package,
   Zap, ArrowUpDown, Video, Info, CreditCard, Map } from 'lucide-react';
@@ -115,7 +116,7 @@ const AddAccommodationPage: React.FC = () => {
     ownerId: '' // Only used by admin
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const validFiles = files.filter(file => {
       const isValid = file.type.startsWith('image/');
@@ -129,8 +130,36 @@ const AddAccommodationPage: React.FC = () => {
       setError('Maximum 10 images allowed');
       return;
     }
-    
-    setImages(prev => [...prev, ...validFiles]);
+
+    try {
+      const compressionOptions = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+        quality: 0.8
+      };
+
+      const compressedFiles = await Promise.all(
+        validFiles.map(async (file) => {
+          try {
+            const compressedFile = await imageCompression(file, compressionOptions);
+            // Create a new File object with the compressed data
+            return new File([compressedFile], file.name, {
+              type: file.type,
+              lastModified: Date.now(),
+            });
+          } catch (err) {
+            console.error('Error compressing file:', err);
+            return file; // Return original file if compression fails
+          }
+        })
+      );
+
+      setImages(prev => [...prev, ...compressedFiles]);
+    } catch (error) {
+      console.error('Error handling images:', error);
+      setError('Error processing images. Please try again.');
+    }
   };
 
   const handleRemoveImage = (index: number) => {
