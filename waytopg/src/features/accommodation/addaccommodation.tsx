@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import imageCompression from 'browser-image-compression';
 import { Home, MapPin, IndianRupee, Upload, Plus, Minus, Loader, Wifi, Tv, Car, 
   Utensils, Dumbbell, Fan, Snowflake, Bath, Wind, ShieldCheck, BookOpen, Package,
-  Zap, ArrowUpDown, Video, Info, CreditCard, Map } from 'lucide-react';
+  Zap, ArrowUpDown, Video, Info, CreditCard, Map, Heater } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Button from '@/components/Button';
 import Navbar from '@/components/navbar';
@@ -32,6 +32,7 @@ const amenityOptions: AmenityOption[] = [
   { id: 'power-backup', label: 'Power Backup', icon: Zap },
   { id: 'elevator', label: 'Elevator', icon: ArrowUpDown },
   { id: 'cctv', label: 'CCTV', icon: Video },
+  { id: 'geyser', label: 'Geyser', icon: Heater },
 ];
 
 const furnishingOptions = [
