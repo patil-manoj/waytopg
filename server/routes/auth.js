@@ -142,15 +142,33 @@ router.post('/login', validateLogin, async (req, res) => {
   }
 });
 
-router.post('/check-phone', async (req, res) => {
-  try {
-    const { phoneNumber } = req.body;
-    const existingUser = await User.findOne({ phoneNumber });
-    res.json({ exists: !!existingUser });
-  } catch (error) {
-    console.error('Error checking phone number:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+router.post('/check-phone', 
+  body('phoneNumber')
+    .notEmpty()
+    .matches(/^\+?[\d\s-]{10,}$/)
+    .withMessage('Please provide a valid phone number'),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { phoneNumber } = req.body;
+      const existingUser = await User.findOne({ phoneNumber });
+      
+      if (existingUser) {
+        return res.status(409).json({ 
+          exists: true, 
+          message: 'This phone number is already registered. Please login instead.' 
+        });
+      }
+      
+      res.json({ exists: false });
+    } catch (error) {
+      console.error('Error checking phone number:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
 
 export default router;

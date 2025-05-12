@@ -51,9 +51,9 @@ const PhoneSignupForm: React.FC<PhoneSignupFormProps> = ({ onVerificationComplet
       }
 
       // Check if phone number already exists
-      const { exists } = await authService.checkPhoneExists(formattedPhoneNumber);
+      const { exists, message } = await authService.checkPhoneExists(formattedPhoneNumber);
       if (exists) {
-        throw new Error('This phone number is already registered. Please login instead.');
+        throw new Error(message || 'This phone number is already registered. Please login instead.');
       }
 
       setupRecaptcha();
