@@ -3,6 +3,8 @@ import Navbar from '@/components/navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/Button';
 import { Calendar, User, Phone, Mail } from 'lucide-react';
+import api from '@/utils/api/axios';
+import { AxiosError } from 'axios';
 
 interface Booking {
   _id: string;
@@ -30,35 +32,15 @@ const OwnerBookings: React.FC = () => {
 
   const fetchBookings = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Authentication required');
-      }
-
       setLoading(true);
       setError(null);
-      const response = await fetch('https://waytopg-dev.onrender.com/api/owner/bookings', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Booking fetch error:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorData
-        });
-        throw new Error(errorData.message || `Failed to fetch bookings (${response.status})`);
-      }
-
-      const data = await response.json();
-      console.log('Bookings data received:', data);
-      setBookings(data);
+      const response = await api.get('/api/owner/bookings');
+      console.log('Bookings data received:', response.data);
+      setBookings(response.data);
     } catch (error) {
       console.error('Error fetching bookings:', error);
-      setError('Failed to load bookings. Please try again later.');
+      const axiosError = error as AxiosError<{ message: string }>;
+      setError(axiosError.response?.data?.message || 'Failed to load bookings. Please try again later.');
     } finally {
       setLoading(false);
     }

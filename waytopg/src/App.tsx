@@ -91,14 +91,14 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-                  <Route
+                  {/* <Route
                     path="ownerbookings"
                     element={
                       <ProtectedRoute allowedRoles={["owner"]}>
                         <OwnerBookings />
                       </ProtectedRoute>
                     }
-                  />
+                  /> */}
                   <Route path="about" element={<AboutPage />} />
                   <Route
                     path="edit-accommodation/:id"
