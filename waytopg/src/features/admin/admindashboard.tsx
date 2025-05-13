@@ -46,7 +46,7 @@ const AdminDashboard: React.FC = () => {
         return;
       }
 
-      const response = await fetch('https://waytopg-backend.onrender.com/api/admin/accommodations', {
+      const response = await fetch('https://waytopg-dev.onrender.com/api/admin/accommodations', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -79,7 +79,7 @@ const AdminDashboard: React.FC = () => {
     try {
       setDeletingIds(prev => new Set(prev).add(accommodationId));
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://waytopg-backend.onrender.com/api/admin/accommodations/${accommodationId}`, {
+      const response = await fetch(`https://waytopg-dev.onrender.com/api/admin/accommodations/${accommodationId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -129,13 +129,13 @@ const AdminDashboard: React.FC = () => {
       
       // Fetch users and stats in parallel
       const [usersResponse, statsResponse] = await Promise.all([
-        fetch('https://waytopg-backend.onrender.com/api/admin/users', {
+        fetch('https://waytopg-dev.onrender.com/api/admin/users', {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         }),
-        fetch('https://waytopg-backend.onrender.com/api/admin/stats', {
+        fetch('https://waytopg-dev.onrender.com/api/admin/stats', {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -202,7 +202,7 @@ const AdminDashboard: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://waytopg-backend.onrender.com/api/admin/approve-owner/${userId}`, {
+      const response = await fetch(`https://waytopg-dev.onrender.com/api/admin/approve-owner/${userId}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -235,7 +235,7 @@ const AdminDashboard: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://waytopg-backend.onrender.com/api/admin/users/${userId}`, {
+      const response = await fetch(`https://waytopg-dev.onrender.com/api/admin/users/${userId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
