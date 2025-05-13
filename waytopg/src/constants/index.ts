@@ -1,5 +1,6 @@
 // API URLs
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://waytopg-dev.onrender.com/api';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://waytopg-backend.onrender.com/api';
+export const API_URL_NO_SUFFIX = import.meta.env.VITE_API_URL?.replace('/api', '') || 'https://waytopg-backend.onrender.com';
 
 // Routes
 export const ROUTES = {
