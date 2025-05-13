@@ -37,11 +37,6 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
-app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/owner', ownerRoutes);
-app.use('/api/student', studentRoutes);
-
 app.get('/ping', (req, res) => {
   res.send('pong');
 });

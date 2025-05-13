@@ -219,4 +219,26 @@ router.put('/accommodations/:id', auth, requireRole(['owner']), upload.array('im
   }
 });
 
+// Get single accommodation
+router.get('/accommodations/:id', auth, requireRole(['owner']), async (req, res) => {
+  try {
+    const accommodation = await Accommodation.findOne({
+      _id: req.params.id,
+      owner: req.user._id
+    }).populate('owner', 'name email isApproved');
+
+    if (!accommodation) {
+      return res.status(404).json({ message: 'Accommodation not found or you do not have permission to view it' });
+    }
+
+    res.json(accommodation);
+  } catch (error) {
+    console.error('Error fetching accommodation:', error);
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid accommodation ID' });
+    }
+    res.status(500).json({ message: 'Error fetching accommodation details' });
+  }
+});
+
 export default router;

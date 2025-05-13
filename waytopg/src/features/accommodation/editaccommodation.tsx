@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Home, MapPin, IndianRupee, Upload, Plus, Minus, Loader, Wifi, Tv, Car, 
   Utensils, Dumbbell, Fan, Snowflake, Bath, Wind, ShieldCheck, BookOpen, Package,
-  Zap, ArrowUpDown, Video } from 'lucide-react';
+  Zap, ArrowUpDown, Video, 
+  Heater} from 'lucide-react';
 import Footer from '@/components/Footer';
 import Button from '@/components/Button';
 import Navbar from '@/components/navbar';
@@ -31,6 +32,7 @@ const amenityOptions: AmenityOption[] = [
   { id: 'power-backup', label: 'Power Backup', icon: Zap },
   { id: 'elevator', label: 'Elevator', icon: ArrowUpDown },
   { id: 'cctv', label: 'CCTV', icon: Video },
+  { id: 'Water-Heater', label: 'Water Heater', icon: Heater },
 ];
 
 const EditAccommodationPage: React.FC = () => {
@@ -50,6 +52,18 @@ const EditAccommodationPage: React.FC = () => {
     roomType: 'single',
     amenities: [] as string[],
     rules: [''],
+    mapLink: '',
+    capacity: '',
+    status: 'available',
+    gender: 'any',
+    furnishing: 'furnished',
+    securityDeposit: '',
+    foodAvailable: false,
+    foodPrice: '',
+    maintenanceCharges: '',
+    electricityIncluded: false,
+    waterIncluded: false,
+    noticePeriod: '30',
   });
 
   useEffect(() => {
@@ -68,11 +82,11 @@ const EditAccommodationPage: React.FC = () => {
           }
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch accommodation details');
-        }
-
         const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to fetch accommodation details');
+        }
         setFormData({
           name: data.name || '',
           description: data.description || '',
@@ -83,6 +97,18 @@ const EditAccommodationPage: React.FC = () => {
           roomType: data.roomType || 'single',
           amenities: data.amenities || [],
           rules: data.rules?.length ? data.rules : [''],
+          mapLink: data.mapLink || '',
+          capacity: data.capacity?.toString() || '',
+          status: data.status || 'available',
+          gender: data.gender || 'any',
+          furnishing: data.furnishing || 'furnished',
+          securityDeposit: data.securityDeposit?.toString() || '',
+          foodAvailable: data.foodAvailable || false,
+          foodPrice: data.foodPrice?.toString() || '',
+          maintenanceCharges: data.maintenanceCharges?.toString() || '',
+          electricityIncluded: data.electricityIncluded || false,
+          waterIncluded: data.waterIncluded || false,
+          noticePeriod: data.noticePeriod?.toString() || '30',
         });
         setExistingImages(data.images || []);
       } catch (error) {
@@ -155,10 +181,24 @@ const EditAccommodationPage: React.FC = () => {
   };
 
   const validateForm = () => {
-    if (!formData.name || !formData.address || !formData.price) {
-      setError('Please fill in all required fields');
-      return false;
+    // Required fields
+    const requiredFields = {
+      name: 'Property Name',
+      address: 'Address',
+      city: 'City',
+      price: 'Rent Amount',
+      capacity: 'Room Capacity',
+      securityDeposit: 'Security Deposit'
+    };
+
+    for (const [field, label] of Object.entries(requiredFields)) {
+      if (!formData[field as keyof typeof formData]) {
+        setError(`Please enter ${label}`);
+        return false;
+      }
     }
+
+    // Validate images
     if (images.length + existingImages.length === 0) {
       setError('Please upload at least one image');
       return false;
@@ -167,6 +207,29 @@ const EditAccommodationPage: React.FC = () => {
       setError('Maximum 10 images allowed');
       return false;
     }
+
+    // Validate numeric fields
+    const numericFields = ['price', 'capacity', 'securityDeposit', 'maintenanceCharges', 'foodPrice', 'noticePeriod'];
+    for (const field of numericFields) {
+      const value = parseFloat(formData[field as keyof typeof formData] as string);
+      if (formData[field as keyof typeof formData] && (isNaN(value) || value < 0)) {
+        setError(`Please enter a valid number for ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
+        return false;
+      }
+    }
+
+    // Validate map link format if provided
+    if (formData.mapLink && !formData.mapLink.startsWith('https://')) {
+      setError('Please enter a valid Google Maps link');
+      return false;
+    }
+
+    // Validate food price if food is available
+    if (formData.foodAvailable && !formData.foodPrice) {
+      setError('Please enter food charges');
+      return false;
+    }
+
     return true;
   };
 
@@ -187,13 +250,26 @@ const EditAccommodationPage: React.FC = () => {
 
       const formDataToSend = new FormData();
       
+      // Convert form data to the correct types before sending
+      const processedFormData = {
+        ...formData,
+        price: parseFloat(formData.price),
+        capacity: parseInt(formData.capacity, 10),
+        securityDeposit: parseFloat(formData.securityDeposit),
+        maintenanceCharges: formData.maintenanceCharges ? parseFloat(formData.maintenanceCharges) : 0,
+        foodPrice: formData.foodPrice ? parseFloat(formData.foodPrice) : 0,
+        noticePeriod: parseInt(formData.noticePeriod, 10),
+        rules: formData.rules.filter(item => item !== '')
+      };
+
       // Append all form fields
-      Object.entries(formData).forEach(([key, value]) => {
+      Object.entries(processedFormData).forEach(([key, value]) => {
         if (Array.isArray(value)) {
-          const cleanedArray = value.filter(item => item !== '');
-          formDataToSend.append(key, JSON.stringify(cleanedArray));
-        } else {
+          formDataToSend.append(key, JSON.stringify(value));
+        } else if (typeof value === 'boolean') {
           formDataToSend.append(key, value.toString());
+        } else {
+          formDataToSend.append(key, value?.toString() || '');
         }
       });
 

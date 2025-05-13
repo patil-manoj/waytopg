@@ -202,7 +202,7 @@ const AccommodationDetailPage: React.FC = () => {
     'Power Backup': <Zap className="w-5 h-5" />,
     'Elevator': <ArrowUpDown className="w-5 h-5" />,
     'CCTV': <Video className="w-5 h-5" />,
-    'Geyser': <Heater className="w-5 h-5" />,
+    'Water Heater': <Heater className="w-5 h-5" />,
   };
 
   return (
