@@ -68,11 +68,11 @@ const EditAccommodationPage: React.FC = () => {
           }
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch accommodation details');
-        }
-
         const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to fetch accommodation details');
+        }
         setFormData({
           name: data.name || '',
           description: data.description || '',
