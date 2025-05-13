@@ -212,7 +212,7 @@ const OwnerDashboard: React.FC = () => {
             <p className="text-3xl font-bold text-blue-600">{accommodations.length}</p>
           </div>
           <Link 
-            to="/owner/bookings" 
+            to="/ownerbookings" 
             className="bg-white p-6 rounded-xl shadow-md flex flex-col items-center hover:bg-blue-50 transition-colors duration-200"
           >
             <h3 className="text-lg font-semibold text-gray-800 mb-2">Manage Bookings</h3>
