@@ -34,7 +34,7 @@ const OwnerBookings: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.get('/api/owner/bookings');
+      const response = await api.get('/owner/bookings');
       console.log('Bookings data received:', response.data);
       setBookings(response.data);
     } catch (error) {
