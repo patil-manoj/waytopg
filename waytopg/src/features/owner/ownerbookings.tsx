@@ -44,10 +44,17 @@ const OwnerBookings: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch bookings');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Booking fetch error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        throw new Error(errorData.message || `Failed to fetch bookings (${response.status})`);
       }
 
       const data = await response.json();
+      console.log('Bookings data received:', data);
       setBookings(data);
     } catch (error) {
       console.error('Error fetching bookings:', error);

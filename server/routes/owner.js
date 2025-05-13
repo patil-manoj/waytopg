@@ -1,6 +1,7 @@
 import express from 'express';
 import { auth, requireRole } from '../middleware/auth.js';
 import Accommodation from '../models/Accommodation.js';
+import Booking from '../models/Booking.js';
 import upload from '../middleware/upload.js';
 import { uploadToCloudinary, deleteFromCloudinary } from '../utils/cloudinary.js';
 
