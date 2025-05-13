@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/Button';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { MapPin, Star, Wifi, Tv, Users, Utensils, Car, Snowflake, BookOpen, ChevronLeft, ChevronRight, 
   Fan, Bath, Wind, ShieldCheck, Package, Home, Zap, ArrowUpDown, Video, Heater, Dumbbell } from 'lucide-react';
 import Navbar from '@/components/navbar';
@@ -159,11 +160,8 @@ const AccommodationDetailPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading accommodation details...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-purple-50 via-blue-50 to-white">
+        <LoadingSpinner size="large" text="Loading accommodation details..." />
       </div>
     );
   }
@@ -437,16 +435,16 @@ const AccommodationDetailPage: React.FC = () => {
             {/* Right column: Sticky booking information */}
             <div className="lg:col-span-1">
               <div className="sticky top-4 space-y-6">
-                <div className="bg-gradient-to-br from-blue-600 to-purple-700 p-6 rounded-lg shadow-md text-white">
-                  <h2 className="text-2xl font-bold mb-4">${accommodation.price}<span className="text-sm text-blue-200">/month</span></h2>
+                <div className="bg-gradient-to-br from-primary-600 to-secondary-600 p-6 rounded-xl shadow-lg text-white backdrop-blur-sm">
+                  <h2 className="text-2xl font-bold mb-4">${accommodation.price}<span className="text-sm text-blue-100">/month</span></h2>
                   <div className="mb-4">
-                    <label htmlFor="checkIn" className="block text-sm font-medium text-blue-100 mb-1">Check-in Date</label>
+                    <label htmlFor="checkIn" className="block text-sm font-medium text-blue-50 mb-1">Check-in Date</label>
                     <input
                       type="date"
                       id="checkIn"
                       value={checkInDate}
                       onChange={(e) => setCheckInDate(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border-0 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-3 py-2 bg-white/90 border-0 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200"
                     />
                   </div>
                   <div className="mb-6">

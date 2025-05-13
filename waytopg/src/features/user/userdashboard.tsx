@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '@/components/navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/Button';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import type { Booking } from '@/types';
 
 const UserDashboard: React.FC = () => {
@@ -79,11 +80,8 @@ const UserDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your bookings...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-purple-50 via-blue-50 to-white">
+        <LoadingSpinner size="large" text="Loading your bookings..." />
       </div>
     );
   }

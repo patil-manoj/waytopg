@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import Footer from '@/components/Footer';
 import Button from '@/components/Button';
 import Navbar from '@/components/navbar';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface Accommodation {
   _id: string;
@@ -143,8 +144,8 @@ const OwnerDashboard: React.FC = () => {
           </div>
         )}
         {loading && (
-          <div className="mb-4 p-4 bg-blue-100 border border-blue-400 text-blue-700 rounded">
-            Loading...
+          <div className="flex justify-center py-8">
+            <LoadingSpinner size="medium" text="Loading your dashboard..." />
           </div>
         )}
         <div className="bg-white p-6 rounded-xl shadow-md">
