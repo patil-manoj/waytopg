@@ -99,7 +99,10 @@ router.get('/bookings', auth, requireRole(['owner']), async (req, res) => {
     res.json(bookings);
   } catch (error) {
     console.error('Error fetching bookings:', error);
-    res.status(500).json({ message: 'Error fetching bookings' });
+    res.status(500).json({ 
+      message: 'Error fetching bookings',
+      error: error.message 
+    });
   }
 });
 

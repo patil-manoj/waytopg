@@ -39,8 +39,10 @@ const OwnerBookings: React.FC = () => {
       setBookings(response.data);
     } catch (error) {
       console.error('Error fetching bookings:', error);
-      const axiosError = error as AxiosError<{ message: string }>;
-      setError(axiosError.response?.data?.message || 'Failed to load bookings. Please try again later.');
+      const axiosError = error as AxiosError<{ message: string, error?: string }>;
+      const errorMessage = axiosError.response?.data?.error || axiosError.response?.data?.message || axiosError.message;
+      console.log('Detailed error:', errorMessage);
+      setError(`Failed to load bookings: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
