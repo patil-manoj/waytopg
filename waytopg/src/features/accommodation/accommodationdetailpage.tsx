@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/Button';
-import { MapPin, Star, Wifi, Tv, Users, Utensils, Car, Snowflake, Sun, Dumbbell, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MapPin, Star, Wifi, Tv, Users, Utensils, Car, Snowflake, BookOpen, ChevronLeft, ChevronRight, 
+  Fan, Bath, Wind, ShieldCheck, Package, Home, Zap, ArrowUpDown, Video, Heater, Dumbbell } from 'lucide-react';
 import Navbar from '@/components/navbar';
 
 interface Accommodation {
@@ -186,13 +187,22 @@ const AccommodationDetailPage: React.FC = () => {
 
   const amenityIcons: { [key: string]: React.ReactNode } = {
     'Wi-Fi': <Wifi className="w-5 h-5" />,
-    'Fully Equipped Kitchen': <Utensils className="w-5 h-5" />,
-    'Smart TV': <Tv className="w-5 h-5" />,
-    'Study Area': <BookOpen className="w-5 h-5" />,
-    'Gym Access': <Dumbbell className="w-5 h-5" />,
+    'TV': <Tv className="w-5 h-5" />,
     'Parking': <Car className="w-5 h-5" />,
+    'Kitchen': <Utensils className="w-5 h-5" />,
+    'Gym': <Dumbbell className="w-5 h-5" />,
     'Air Conditioning': <Snowflake className="w-5 h-5" />,
-    'Heating': <Sun className="w-5 h-5" />,
+    'Fan': <Fan className="w-5 h-5" />,
+    'Attached Bathroom': <Bath className="w-5 h-5" />,
+    'Laundry': <Wind className="w-5 h-5" />,
+    'Security': <ShieldCheck className="w-5 h-5" />,
+    'Study Table': <BookOpen className="w-5 h-5" />,
+    'Cupboard': <Package className="w-5 h-5" />,
+    'Balcony': <Home className="w-5 h-5" />,
+    'Power Backup': <Zap className="w-5 h-5" />,
+    'Elevator': <ArrowUpDown className="w-5 h-5" />,
+    'CCTV': <Video className="w-5 h-5" />,
+    'Water Heater': <Heater className="w-5 h-5" />,
   };
 
   return (
