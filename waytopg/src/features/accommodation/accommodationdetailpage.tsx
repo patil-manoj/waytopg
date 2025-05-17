@@ -435,45 +435,120 @@ const AccommodationDetailPage: React.FC = () => {
             {/* Right column: Sticky booking information */}
             <div className="lg:col-span-1">
               <div className="sticky top-4 space-y-6">
-                <div className="bg-gradient-to-br from-primary-600 to-secondary-600 p-6 rounded-xl shadow-lg text-white backdrop-blur-sm">
-                  <h2 className="text-2xl font-bold mb-4">${accommodation.price}<span className="text-sm text-blue-100">/month</span></h2>
-                  <div className="mb-4">
-                    <label htmlFor="checkIn" className="block text-sm font-medium text-blue-50 mb-1">Check-in Date</label>
-                    <input
-                      type="date"
-                      id="checkIn"
-                      value={checkInDate}
-                      onChange={(e) => setCheckInDate(e.target.value)}
-                      className="w-full px-3 py-2 bg-white/90 border-0 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200"
-                    />
+                <div className="relative bg-gradient-to-r from-blue-500 to-purple-600 p-8 rounded-2xl shadow-xl overflow-hidden group">
+                  {/* Glass effect overlay */}
+                  <div className="absolute inset-0 bg-white opacity-90"></div>
+
+                  {/* Subtle corner accent */}
+                  <div className="absolute top-0 right-0 w-24 h-24">
+                    <div className="absolute inset-0 bg-gradient-to-bl from-blue-200 via-purple-200 to-transparent rounded-bl-full opacity-30"></div>
                   </div>
-                  <div className="mb-6">
-                    <label htmlFor="checkOut" className="block text-sm font-medium text-blue-100 mb-1">Check-out Date</label>
-                    <input
-                      type="date"
-                      id="checkOut"
-                      value={checkOutDate}
-                      onChange={(e) => setCheckOutDate(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border-0 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    />
+
+                  {/* Bottom accent line */}
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500 opacity-20"></div>
+                  
+                  {/* Price section with animation */}
+                  <div className="relative">
+                    <h2 className="relative text-4xl font-bold mb-2 flex items-baseline text-blue-600">
+                      <span className="flex items-center">
+                        <span className="text-blue-700">$</span>
+                        <span>{accommodation.price}</span>
+                      </span>
+                      <span className="text-lg font-medium text-blue-500 ml-2">/month</span>
+                    </h2>
+                    <div className="h-px bg-gradient-to-r from-blue-200 via-purple-200 to-blue-200 my-4"></div>
                   </div>
-                  <Button 
-                    onClick={handleBooking} 
-                    className="w-full bg-white hover:bg-blue-50 text-blue-600 font-semibold tracking-wide"
-                    variant="primary"
-                    size="large"
-                  >
-                    {localStorage.getItem('token') ? 'Book Now' : 'Login to Book'}
-                  </Button>
-                  <p className="mt-4 text-sm text-blue-200 text-center">Free cancellation up to 48 hours before check-in</p>
+                  <div className="space-y-4">
+                    <div className="relative group/date">
+                      <label htmlFor="checkIn" className="block text-sm font-semibold text-blue-700 mb-2 flex items-center">
+                        <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Check-in Date
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="date"
+                          id="checkIn"
+                          value={checkInDate}
+                          onChange={(e) => setCheckInDate(e.target.value)}
+                          className="w-full px-4 py-3 bg-white border border-blue-200 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all duration-200 hover:border-blue-300 shadow-sm pl-10"
+                        />
+                        <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-white/50 via-transparent to-transparent rounded-lg group-hover/date:opacity-0 transition-opacity"></div>
+                      </div>
+                    </div>
+                    <div className="relative group/date">
+                      <label htmlFor="checkOut" className="block text-sm font-semibold text-blue-700 mb-2 flex items-center">
+                        <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Check-out Date
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="date"
+                          id="checkOut"
+                          value={checkOutDate}
+                          onChange={(e) => setCheckOutDate(e.target.value)}
+                          className="w-full px-4 py-3 bg-white border border-blue-200 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all duration-200 hover:border-blue-300 shadow-sm pl-10"
+                        />
+                        <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-white/50 via-transparent to-transparent rounded-lg group-hover/date:opacity-0 transition-opacity"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-8 relative">
+                    <Button 
+                      onClick={handleBooking} 
+                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold tracking-wide text-lg shadow-md hover:shadow-lg transition-all duration-300 py-3"
+                      variant="primary"
+                      size="large"
+                    >
+                      <span className="relative z-10 flex items-center justify-center gap-2">
+                        {localStorage.getItem('token') ? 'Book Now' : 'Login to Book'}
+                      </span>
+                    </Button>
+                    <div className="mt-4 text-sm text-blue-700 text-center font-medium relative">
+                      <div className="flex items-center justify-center space-x-2">
+                        <span>Free cancellation up to 48 hours before check-in</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-white p-4 rounded-lg shadow-md">
-                  <h3 className="font-semibold mb-2">Why Book With Us?</h3>
-                  <ul className="text-sm text-gray-600">
-                    <li className="mb-1">• Best Price Guarantee</li>
-                    <li className="mb-1">• 24/7 Customer Support</li>
-                    <li className="mb-1">• Verified Listings</li>
-                    <li>• Secure Payments</li>
+                <div className="bg-white/95 p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-100/20 backdrop-blur-sm">
+                  <h3 className="text-xl font-bold mb-6 text-blue-600">Why Book With Us?</h3>
+                  <ul className="space-y-4 text-gray-700">
+                    <li className="flex items-center bg-blue-50/50 p-3 rounded-lg">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <span className="font-medium">Best Price Guarantee</span>
+                    </li>
+                    <li className="flex items-center bg-blue-50/50 p-3 rounded-lg">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <span className="font-medium">24/7 Customer Support</span>
+                    </li>
+                    <li className="flex items-center bg-blue-50/50 p-3 rounded-lg">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span className="font-medium">Verified Listings</span>
+                    </li>
+                    <li className="flex items-center bg-blue-50/50 p-3 rounded-lg">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                      </div>
+                      <span className="font-medium">Secure Payments</span>
+                    </li>
                   </ul>
                 </div>
               </div>
