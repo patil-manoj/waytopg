@@ -44,7 +44,7 @@ const OwnerDashboard: React.FC = () => {
 
       console.log('Deleting accommodation:', { id });
       
-      const response = await fetch(`https://waytopg-dev.onrender.com/api/owner/accommodations/${id}`, {
+      const response = await fetch(`https://waytopg-backend.onrender.com/api/owner/accommodations/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -98,7 +98,7 @@ const OwnerDashboard: React.FC = () => {
           return;
         }
 
-        const response = await fetch('https://waytopg-dev.onrender.com/api/owner/accommodations', {
+        const response = await fetch('https://waytopg-backend.onrender.com/api/owner/accommodations', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
