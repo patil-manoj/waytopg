@@ -12,7 +12,7 @@ export const useAuth = () => {
     if (token) {
       setIsAuthenticated(true);
       // Fetch user data from your authentication service
-      fetch('https://waytopg-dev.onrender.com/api/auth/me', {
+      fetch('https://waytopg-backend.onrender.com/api/auth/me', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
