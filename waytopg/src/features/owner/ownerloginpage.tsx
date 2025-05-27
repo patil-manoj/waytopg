@@ -13,7 +13,7 @@ const OwnerLoginPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('https://waytopg-backend.onrender.com/api/auth/owner-login', {
+      const response = await fetch('https://waytopg.onrender.com/api/auth/owner-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phoneNumber, password }),

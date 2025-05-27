@@ -96,7 +96,7 @@ export default function Signup() {
 
     try {
       setIsLoading(true);
-      const response = await fetch('https://waytopg-backend.onrender.com/api/auth/signup', {
+      const response = await fetch('https://waytopg.onrender.com/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
