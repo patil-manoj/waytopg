@@ -31,7 +31,7 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
       }
 
       // Send OTP via backend API
-      const response = await fetch('https://waytopg-dev.onrender.com/api/auth/send-otp', {
+      const response = await fetch('https://waytopg.onrender.com/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phoneNumber: cleanPhoneNumber })
@@ -65,7 +65,7 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
 
     try {
       const cleanPhoneNumber = phoneNumber.replace(/\D/g, '');
-      const response = await fetch('https://waytopg-dev.onrender.com/api/auth/verify-otp', {
+      const response = await fetch('https://waytopg.onrender.com/api/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -114,7 +114,7 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
             isPhoneVerified: true
           };
 
-      const response = await fetch(`https://waytopg-dev.onrender.com/api/auth/${endpoint}`, {
+      const response = await fetch(`https://waytopg.onrender.com/api/auth/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -141,95 +141,95 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/30 to-slate-900/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white/95 w-full max-w-5xl rounded-2xl shadow-2xl ring-1 ring-black/5 backdrop-blur-sm transform transition-all duration-500 scale-100 flex overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-gradient-to-br from-indigo-900/30 to-slate-900/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white/95 w-full max-w-5xl rounded-2xl shadow-2xl ring-1 ring-black/5 backdrop-blur-sm transform transition-all duration-500 scale-100 flex flex-col md:flex-row overflow-hidden max-h-[90vh]">
         {/* Left Column */}
-        <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-indigo-500 via-blue-500 to-sky-500 p-8 relative overflow-hidden">
-          <div className="relative z-10 flex flex-col h-full text-white">
+        <div className="hidden md:block md:w-1/2 bg-gradient-to-br from-indigo-500 via-blue-500 to-sky-500 p-6 lg:p-8 relative overflow-y-auto max-h-[90vh]">
+          <div className="relative z-10 flex flex-col min-h-full text-white">
             {/* Brand Section */}
-            <div className="mb-12">
-              <div className="inline-flex items-center space-x-2 bg-white/20 rounded-full px-4 py-1.5 text-sm backdrop-blur-sm mb-6">
-                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+            <div className="flex-shrink-0 mb-8 md:mb-12">
+              <div className="inline-flex items-center space-x-2 bg-white/20 rounded-full px-3 md:px-4 py-1 md:py-1.5 text-xs md:text-sm backdrop-blur-sm mb-4 md:mb-6">
+                <div className="w-1.5 md:w-2 h-1.5 md:h-2 rounded-full bg-green-400 animate-pulse"></div>
                 <span className="font-medium">Live Accommodation Updates</span>
               </div>
-              <h2 className="text-4xl font-bold tracking-tight mb-4 leading-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-2 md:mb-4 leading-tight">
                 Your Perfect PG <br />
                 <span className="text-sky-200">Awaits You</span>
               </h2>
-              <p className="text-lg text-white/90 leading-relaxed max-w-md">
+              <p className="text-base md:text-lg text-white/90 leading-relaxed max-w-md">
                 Find your ideal accommodation with verified PGs and hassle-free booking
               </p>
             </div>
             
             {/* Feature Cards */}
-            <div className="space-y-6">
-              <div className="group flex items-center space-x-4 bg-white/10 p-4 rounded-xl backdrop-blur-sm transition-all duration-300 hover:bg-white/20">
-                <div className="flex-shrink-0 p-3 bg-white/20 rounded-xl">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex-shrink-0 space-y-4 md:space-y-6">
+              <div className="group flex items-center space-x-3 md:space-x-4 bg-white/10 p-3 md:p-4 rounded-xl backdrop-blur-sm transition-all duration-300 hover:bg-white/20">
+                <div className="flex-shrink-0 p-2 md:p-3 bg-white/20 rounded-xl">
+                  <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-white group-hover:text-sky-200 transition-colors">Prime Locations</h3>
-                  <p className="text-sm text-white/75">Strategically located near colleges</p>
+                  <h3 className="text-sm md:text-base font-semibold text-white group-hover:text-sky-200 transition-colors">Prime Locations</h3>
+                  <p className="text-xs md:text-sm text-white/75">Strategically located near colleges</p>
                 </div>
               </div>
 
-              <div className="group flex items-center space-x-4 bg-white/10 p-4 rounded-xl backdrop-blur-sm transition-all duration-300 hover:bg-white/20">
-                <div className="flex-shrink-0 p-3 bg-white/20 rounded-xl">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="group flex items-center space-x-3 md:space-x-4 bg-white/10 p-3 md:p-4 rounded-xl backdrop-blur-sm transition-all duration-300 hover:bg-white/20">
+                <div className="flex-shrink-0 p-2 md:p-3 bg-white/20 rounded-xl">
+                  <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-white group-hover:text-sky-200 transition-colors">Verified & Safe</h3>
-                  <p className="text-sm text-white/75">Every PG is personally verified</p>
+                  <h3 className="text-sm md:text-base font-semibold text-white group-hover:text-sky-200 transition-colors">Verified & Safe</h3>
+                  <p className="text-xs md:text-sm text-white/75">Every PG is personally verified</p>
                 </div>
               </div>
 
-              <div className="group flex items-center space-x-4 bg-white/10 p-4 rounded-xl backdrop-blur-sm transition-all duration-300 hover:bg-white/20">
-                <div className="flex-shrink-0 p-3 bg-white/20 rounded-xl">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="group flex items-center space-x-3 md:space-x-4 bg-white/10 p-3 md:p-4 rounded-xl backdrop-blur-sm transition-all duration-300 hover:bg-white/20">
+                <div className="flex-shrink-0 p-2 md:p-3 bg-white/20 rounded-xl">
+                  <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-white group-hover:text-sky-200 transition-colors">Quick Process</h3>
-                  <p className="text-sm text-white/75">Book your PG in minutes</p>
+                  <h3 className="text-sm md:text-base font-semibold text-white group-hover:text-sky-200 transition-colors">Quick Process</h3>
+                  <p className="text-xs md:text-sm text-white/75">Book your PG in minutes</p>
                 </div>
               </div>
             </div>
 
             {/* Stats Section */}
-            <div className="mt-auto pt-12 grid grid-cols-2 gap-6">
-              <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
-                <p className="text-3xl font-bold text-white">1000+</p>
-                <p className="text-sm font-medium text-white/75">Verified PGs</p>
+            <div className="flex-shrink-0 mt-8 md:mt-12 grid grid-cols-2 gap-4 md:gap-6 mb-6">
+              <div className="bg-white/10 rounded-xl p-3 md:p-4 backdrop-blur-sm">
+                <p className="text-2xl md:text-3xl font-bold text-white">1000+</p>
+                <p className="text-xs md:text-sm font-medium text-white/75">Verified PGs</p>
               </div>
-              <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
-                <p className="text-3xl font-bold text-white">5000+</p>
-                <p className="text-sm font-medium text-white/75">Happy Students</p>
+              <div className="bg-white/10 rounded-xl p-3 md:p-4 backdrop-blur-sm">
+                <p className="text-2xl md:text-3xl font-bold text-white">5000+</p>
+                <p className="text-xs md:text-sm font-medium text-white/75">Happy Students</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Right Column - Auth Form */}
-        <div className="w-full md:w-1/2 p-8">
+        <div className="w-full md:w-1/2 p-6 lg:p-8 relative overflow-y-auto max-h-[90vh]">
           {/* Close Button */}
-          <div className="absolute top-4 right-4">
+          <div className="absolute top-2 right-2 z-10">
             <button
               onClick={onClose}
-              className="group bg-white hover:bg-gray-50 p-2.5 rounded-full text-gray-500 hover:text-gray-700 shadow-lg ring-1 ring-black/5 transition-all duration-200 hover:scale-110"
+              className="group bg-white/90 hover:bg-gray-50 p-2 rounded-full text-gray-500 hover:text-gray-700 shadow-lg ring-1 ring-black/5 transition-all duration-200 hover:scale-110"
               aria-label="Close"
             >
               <X className="h-5 w-5 transform group-hover:rotate-90 transition-transform duration-200" />
             </button>
           </div>
 
-          <div className="text-center mb-8">
+          <div className="text-center mb-6 lg:mb-8">
             <div className="mx-auto w-24 h-24 bg-gradient-to-br from-indigo-500 to-sky-500 rounded-full mb-6 flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
