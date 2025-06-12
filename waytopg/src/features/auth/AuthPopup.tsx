@@ -93,42 +93,73 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  };  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
     try {
-      const endpoint = isLogin ? 'login' : 'signup';
       const cleanPhoneNumber = phoneNumber.replace(/\D/g, '');
-      const body = isLogin 
-        ? { phoneNumber: cleanPhoneNumber, password }
-        : { 
+      
+      if (isLogin) {
+        // Validate login fields
+        if (!cleanPhoneNumber || cleanPhoneNumber.length !== 10) {
+          setError('Please enter a valid 10-digit phone number');
+          setIsLoading(false);
+          return;
+        }
+        
+        if (!password || password.trim() === '') {
+          setError('Please enter your password');
+          setIsLoading(false);
+          return;
+        }
+
+        // Direct login with phone and password
+        const response = await fetch(`https://waytopg.onrender.com/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            phoneNumber: cleanPhoneNumber, 
+            password: password.trim()
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('userRole', data.role);
+          onClose();
+          window.location.reload();
+        } else {
+          setError(data.message || 'Invalid credentials');
+        }
+      } else {
+        // Signup after OTP verification
+        const response = await fetch(`https://waytopg.onrender.com/api/auth/signup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
             name, 
             phoneNumber: cleanPhoneNumber, 
             email, 
             password,
             role: 'student',
             isPhoneVerified: true
-          };
+          }),
+        });
 
-      const response = await fetch(`https://waytopg.onrender.com/api/auth/${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+        const data = await response.json();
 
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userRole', data.role);
-        onClose();
-        window.location.reload();
-      } else {
-        setError(data.message || 'An error occurred');
+        if (response.ok) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('userRole', data.role);
+          onClose();
+          window.location.reload();
+        } else {
+          setError(data.message || 'An error occurred during signup');
+        }
       }
     } catch (error) {
       console.error('Auth error:', error);
@@ -247,40 +278,91 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
               {error}
             </div>
-          )}
-
-          {step === 'phone' && (
-            <form onSubmit={handleSendOtp} className="space-y-4">
-              <div>
-                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
-                <input
-                  type="tel"
-                  id="phoneNumber"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  pattern="[0-9]{10}"
-                  placeholder="1234567890"
-                  maxLength={10}
-                  minLength={10}
-                  required
-                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
-                />
-              </div>
-              <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white py-2 rounded-md hover:from-indigo-600 hover:to-blue-600 transition-all duration-200"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center justify-center">
-                    <Loader className="animate-spin -ml-1 mr-3 h-5 w-5" />
-                    <span>Sending OTP...</span>
+          )}          {step === 'phone' && (
+            <>              {isLogin ? (
+                // Direct login form with phone and password
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone Number <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      id="phoneNumber"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      pattern="[0-9]{10}"
+                      placeholder="Enter your 10-digit phone number"
+                      maxLength={10}
+                      minLength={10}
+                      required
+                      className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
+                    />
                   </div>
-                ) : (
-                  'Send OTP'
-                )}
-              </Button>
-            </form>
+                  <div>
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                      Password <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="password"
+                      id="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      required
+                      className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white py-2 rounded-md hover:from-indigo-600 hover:to-blue-600 transition-all duration-200"
+                    disabled={isLoading || !phoneNumber || !password}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center justify-center">
+                        <Loader className="animate-spin -ml-1 mr-3 h-5 w-5" />
+                        <span>Signing in...</span>
+                      </div>
+                    ) : (
+                      'Sign In'
+                    )}
+                  </Button>
+                </form>
+              ) : (
+                // Signup form with OTP verification
+                <form onSubmit={handleSendOtp} className="space-y-4">
+                  <div>
+                    <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
+                    <input
+                      type="tel"
+                      id="phoneNumber"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      pattern="[0-9]{10}"
+                      placeholder="1234567890"
+                      maxLength={10}
+                      minLength={10}
+                      required
+                      className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white py-2 rounded-md hover:from-indigo-600 hover:to-blue-600 transition-all duration-200"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center justify-center">
+                        <Loader className="animate-spin -ml-1 mr-3 h-5 w-5" />
+                        <span>Sending OTP...</span>
+                      </div>
+                    ) : (
+                      'Send OTP'
+                    )}
+                  </Button>
+                </form>
+              )}
+            </>
           )}
 
           {step === 'otp' && (
@@ -366,14 +448,17 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
                 )}
               </Button>
             </form>
-          )}
-
-          <div className="mt-6 text-center">
+          )}          <div className="mt-6 text-center">
             <button
               onClick={() => {
                 setIsLogin(!isLogin);
                 setStep('phone');
                 setError('');
+                setPhoneNumber('');
+                setPassword('');
+                setName('');
+                setEmail('');
+                setOtp('');
               }}
               className="text-sm text-indigo-600 hover:text-indigo-500"
             >
@@ -387,4 +472,3 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
 };
 
 export default AuthPopup;
-
