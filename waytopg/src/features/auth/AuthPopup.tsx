@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/Button';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { authService } from '@/services/auth.service';
-import type { User } from '@/types';
 
 declare global {
   interface Window {
