@@ -124,8 +124,10 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
     setError('');
     
     try {
+
       if (!auth) {
         throw new Error('Firebase auth is not initialized');
+
       }
 
       setupRecaptcha();
@@ -154,6 +156,7 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
     setError('');
     
     try {
+
       if (!confirmationResult) {
         throw new Error('No OTP confirmation pending');
       }
@@ -638,3 +641,4 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
 };
 
 export default AuthPopup;
+

@@ -12,7 +12,7 @@ export const useAuth = () => {
     if (token) {
       setIsAuthenticated(true);
       // Fetch user data from your authentication service
-      fetch('https://waytopg-backend.onrender.com/api/auth/me', {
+      fetch('https://waytopg.onrender.com/api/auth/me', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -54,3 +54,4 @@ export const useLocalStorage = <T,>(key: string, initialValue: T) => {
 
   return [storedValue, setValue] as const;
 };
+

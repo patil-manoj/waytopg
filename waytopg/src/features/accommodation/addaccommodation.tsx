@@ -69,7 +69,9 @@ const AddAccommodationPage: React.FC = () => {
       
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('https://waytopg-backend.onrender.com/api/admin/users', {
+
+        const response = await fetch('https://waytopg.onrender.com/api/admin/users', {
+
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -307,8 +309,8 @@ const AddAccommodationPage: React.FC = () => {
 
       // Use different endpoints for admin and owner
       const endpoint = isAdmin ? 
-        'https://waytopg-backend.onrender.com/api/admin/accommodations' :
-        'https://waytopg-backend.onrender.com/api/owner/accommodations';
+        'https://waytopg.onrender.com/api/admin/accommodations' :
+        'https://waytopg.onrender.com/api/owner/accommodations';
 
       const response = await fetch(endpoint, {
         method: 'POST',

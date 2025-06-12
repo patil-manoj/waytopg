@@ -51,7 +51,8 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({ phoneNumber }) => {
     setError('');
 
     try {
-      const response = await fetch('https://waytopg-backend.onrender.com/api/auth/complete-signup', {
+
+      const response = await fetch('https://waytopg.onrender.com/api/auth/complete-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -222,3 +223,4 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({ phoneNumber }) => {
 };
 
 export default UserDetailsForm;
+
