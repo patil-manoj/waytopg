@@ -16,7 +16,7 @@ This project uses Firebase Phone Authentication. Follow these steps to set up Fi
 5. Set up your environment variables in `.env`:
 
 ```env
-VITE_API_URL=https://waytopg-dev.onrender.com/api
+VITE_API_URL=https://waytopg-backend.onrender.com/api
 
 # Firebase Configuration
 VITE_FIREBASE_API_KEY=your_api_key
