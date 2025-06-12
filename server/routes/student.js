@@ -20,6 +20,13 @@ router.get('/bookings', auth, requireRole(['student']), async (req, res) => {
 
 router.post('/book', auth, requireRole(['student']), async (req, res) => {
   try {
+    // Log the user role and request info
+    console.log('Booking request from user:', {
+      userId: req.user._id,
+      role: req.user.role,
+      accommodationId: req.body.accommodation
+    });
+
     // Check if accommodation exists
     const accommodation = await Accommodation.findById(req.body.accommodation);
     if (!accommodation) {

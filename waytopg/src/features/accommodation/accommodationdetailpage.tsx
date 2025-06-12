@@ -99,10 +99,17 @@ const AccommodationDetailPage: React.FC = () => {
       
       if (response.ok) {
         alert('Your details have been saved! The owner will contact you soon.');
-        // Refresh the accommodation data to update status
         window.location.reload();
       } else {
+        // Display the specific error message from the server
         alert(data.message || 'Error saving details. Please try again.');
+        
+        // If the error is related to authentication, redirect to login
+        if (response.status === 401 || response.status === 403) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('userRole');
+          window.location.href = '/login';
+        }
       }
     } catch (error) {
       console.error('Error saving accommodation details:', error);
