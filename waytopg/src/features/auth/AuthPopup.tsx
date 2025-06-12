@@ -1,58 +1,147 @@
 import React, { useState } from 'react';
 import { X, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { authService } from '@/services/auth.service';
+import type { User } from '@/types';
+
+declare global {
+  interface Window {
+    recaptchaVerifier: RecaptchaVerifier;
+  }
+}
 
 interface AuthPopupProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+type UserRole = 'student' | 'owner' | 'admin';
+
+interface FormErrors {
+  name?: string;
+  phoneNumber?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+  companyName?: string;
+  businessRegistration?: string;
+  adminCode?: string;
+  form?: string;
+}
+
 const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [step, setStep] = useState<'phone' | 'otp' | 'details'>('phone');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [otp, setOtp] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  
+  const [formData, setFormData] = useState({
+    phoneNumber: '',
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    role: 'student' as UserRole,
+    companyName: '',
+    businessRegistration: '',
+    adminCode: '',
+    otp: '',
+    isPhoneVerified: false,
+    isEmailVerified: false
+  });
+
+  const setupRecaptcha = () => {
+    if (!window.recaptchaVerifier && auth) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible',
+        callback: () => {
+          // reCAPTCHA solved, allow signInWithPhoneNumber.
+        },
+      });
+    }
+  };
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    setError(''); // Clear general error
+    setErrors(prev => ({ ...prev, [name]: '', form: '' })); // Clear specific field error
+  };
+  const validateForm = () => {
+    const newErrors: FormErrors = {};
+
+    if (isLogin) {
+      if (!formData.phoneNumber.trim() || formData.phoneNumber.length !== 10) {
+        newErrors.phoneNumber = 'Please enter a valid 10-digit phone number';
+      }
+      if (!formData.password) {
+        newErrors.password = 'Please enter your password';
+      }
+    } else {
+      switch (step) {
+        case 'phone':
+          if (!formData.phoneNumber.trim()) newErrors.phoneNumber = 'Phone number is required';
+          else if (!/^\+?[\d\s-]{10,}$/.test(formData.phoneNumber)) newErrors.phoneNumber = 'Please enter a valid phone number';
+          break;
+        
+        case 'otp':
+          if (!formData.otp || formData.otp.length !== 6) {
+            newErrors.form = 'Please enter a valid 6-digit OTP';
+          }
+          break;
+        
+        case 'details':
+          if (!formData.name.trim()) newErrors.name = 'Name is required';
+          if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+            newErrors.email = 'If provided, email must be valid';
+          }
+          if (!formData.password) newErrors.password = 'Password is required';
+          else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+          if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+          if (formData.role === 'owner') {
+            if (!formData.companyName?.trim()) newErrors.companyName = 'Company name is required';
+            if (!formData.businessRegistration?.trim()) newErrors.businessRegistration = 'Business registration number is required';
+          }
+          if (formData.role === 'admin' && !formData.adminCode?.trim()) newErrors.adminCode = 'Admin code is required';
+          break;
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
+    
     setIsLoading(true);
     setError('');
-
+    
     try {
-      // Ensure phone number is exactly 10 digits
-      const cleanPhoneNumber = phoneNumber.replace(/\D/g, '');
-      if (cleanPhoneNumber.length !== 10) {
-        throw new Error('Phone number must be exactly 10 digits');
+      if (!auth) {
+        throw new Error('Firebase auth is not initialized');
       }
 
-      // Send OTP via backend API
-      const response = await fetch('https://waytopg.onrender.com/api/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber: cleanPhoneNumber })
-      });
-
-      let data;
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        data = await response.json();
-      } else {
-        throw new Error('Server returned invalid response');
-      }
-
-      if (response.ok) {
-        setStep('otp');
-      } else {
-        throw new Error(data.message || 'Failed to send OTP');
-      }
-    } catch (error) {
-      console.error('Error sending OTP:', error);
-      setError(error instanceof Error ? error.message : 'Failed to send OTP. Please try again.');
+      setupRecaptcha();
+      const formattedPhoneNumber = '+91' + formData.phoneNumber.trim().replace(/\D/g, '');
+      
+      const confirmation = await signInWithPhoneNumber(
+        auth,
+        formattedPhoneNumber,
+        window.recaptchaVerifier
+      );
+      
+      setConfirmationResult(confirmation);
+      setStep('otp');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send OTP');
     } finally {
       setIsLoading(false);
     }
@@ -60,110 +149,112 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
+    
     setIsLoading(true);
     setError('');
-
+    
     try {
-      const cleanPhoneNumber = phoneNumber.replace(/\D/g, '');
-      const response = await fetch('https://waytopg.onrender.com/api/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phoneNumber: cleanPhoneNumber,
-          otp: otp.trim()
-        })
-      });
-      
-      let data;
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        data = await response.json();
-      } else {
-        throw new Error('Server returned invalid response');
+      if (!confirmationResult) {
+        throw new Error('No OTP confirmation pending');
       }
 
-      if (response.ok && data.verified) {
-        setStep('details');
+      await confirmationResult.confirm(formData.otp);
+      setFormData(prev => ({ ...prev, isPhoneVerified: true }));
+      
+      if (isLogin) {
+        // For login, attempt to sign in with the credentials
+        const response = await authService.login(formData.phoneNumber, formData.password);
+        
+        if (response && response.token) {
+          localStorage.setItem('token', response.token);
+          onClose();
+          window.location.reload(); // Refresh to update auth state
+        }
       } else {
-        throw new Error(data.message || 'Invalid OTP');
+        // For signup, move to details step
+        setStep('details');
       }
-    } catch (error) {
-      console.error('Error verifying OTP:', error);
-      setError(error instanceof Error ? error.message : 'Failed to verify OTP. Please try again.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to verify OTP');
     } finally {
       setIsLoading(false);
     }
-  };  const handleSubmit = async (e: React.FormEvent) => {
+  };
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     setIsLoading(true);
     setError('');
-
+    
     try {
-      const cleanPhoneNumber = phoneNumber.replace(/\D/g, '');
-      
+      if (!isLogin && !formData.isPhoneVerified) {
+        setErrors({ form: 'Phone number must be verified before creating account' });
+        return;
+      }
+
       if (isLogin) {
-        // Validate login fields
-        if (!cleanPhoneNumber || cleanPhoneNumber.length !== 10) {
-          setError('Please enter a valid 10-digit phone number');
-          setIsLoading(false);
-          return;
-        }
+        const response = await authService.login(formData.phoneNumber, formData.password);
         
-        if (!password || password.trim() === '') {
-          setError('Please enter your password');
-          setIsLoading(false);
-          return;
-        }
-
-        // Direct login with phone and password
-        const response = await fetch(`https://waytopg.onrender.com/api/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            phoneNumber: cleanPhoneNumber, 
-            password: password.trim()
-          }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('userRole', data.role);
+        if (response && response.token) {
+          localStorage.setItem('token', response.token);
           onClose();
           window.location.reload();
-        } else {
-          setError(data.message || 'Invalid credentials');
         }
       } else {
-        // Signup after OTP verification
-        const response = await fetch(`https://waytopg.onrender.com/api/auth/signup`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            name, 
-            phoneNumber: cleanPhoneNumber, 
-            email, 
-            password,
-            role: 'student',
-            isPhoneVerified: true
-          }),
-        });
+        try {
+          const response = await fetch('https://waytopg-backend.onrender.com/api/auth/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: formData.name,
+              phoneNumber: formData.phoneNumber,
+              email: formData.email || undefined,
+              password: formData.password,
+              role: formData.role,
+              isPhoneVerified: formData.isPhoneVerified,
+              isEmailVerified: false,
+              companyName: formData.role === 'owner' ? formData.companyName : undefined,
+              businessRegistration: formData.role === 'owner' ? formData.businessRegistration : undefined,
+              adminCode: formData.role === 'admin' ? formData.adminCode : undefined,
+            }),
+          });
 
-        const data = await response.json();
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to create account');
+          }
 
-        if (response.ok) {
+          const data = await response.json();
+          
           localStorage.setItem('token', data.token);
           localStorage.setItem('userRole', data.role);
+          
           onClose();
-          window.location.reload();
-        } else {
-          setError(data.message || 'An error occurred during signup');
+
+          // Navigate based on role
+          switch (data.role) {
+            case 'student':
+              window.location.href = '/accommodations';
+              break;
+            case 'owner':
+              window.location.href = '/owner-dashboard';
+              break;
+            case 'admin':
+              window.location.href = '/admin-dashboard';
+              break;
+            default:
+              window.location.href = '/';
+          }
+        } catch (error) {
+          console.error('Signup error:', error);
+          setErrors({ form: error instanceof Error ? error.message : 'An error occurred during signup' });
         }
       }
-    } catch (error) {
-      console.error('Auth error:', error);
-      setError(error instanceof Error ? error.message : 'An error occurred. Please try again.');
+    } catch (err) {
+      console.error('Auth error:', err);
+      setErrors({ form: err instanceof Error ? err.message : 'An error occurred' });
     } finally {
       setIsLoading(false);
     }
@@ -175,7 +266,7 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-gradient-to-br from-indigo-900/30 to-slate-900/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white/95 w-full max-w-5xl rounded-2xl shadow-2xl ring-1 ring-black/5 backdrop-blur-sm transform transition-all duration-500 scale-100 flex flex-col md:flex-row overflow-hidden max-h-[90vh]">
-        {/* Left Column */}
+        {/* Left Column - Features and Stats */}
         <div className="hidden md:block md:w-1/2 bg-gradient-to-br from-indigo-500 via-blue-500 to-sky-500 p-6 lg:p-8 relative overflow-y-auto max-h-[90vh]">
           <div className="relative z-10 flex flex-col min-h-full text-white">
             {/* Brand Section */}
@@ -260,12 +351,9 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
             </button>
           </div>
 
+          <div id="recaptcha-container"></div>
+
           <div className="text-center mb-6 lg:mb-8">
-            <div className="mx-auto w-24 h-24 bg-gradient-to-br from-indigo-500 to-sky-500 rounded-full mb-6 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
             <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-sky-500 mb-2">
               {isLogin ? 'Welcome Back!' : 'Create Account'}
             </h2>
@@ -278,37 +366,39 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
               {error}
             </div>
-          )}          {step === 'phone' && (
+          )}
+
+          {step === 'phone' && (
             <>              {isLogin ? (
                 // Direct login form with phone and password
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                      Phone Number <span className="text-red-500">*</span>
-                    </label>
+                    <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
                     <input
                       type="tel"
                       id="phoneNumber"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      name="phoneNumber"
+                      value={formData.phoneNumber}
+                      onChange={handleInput}
                       pattern="[0-9]{10}"
-                      placeholder="Enter your 10-digit phone number"
+                      placeholder="1234567890"
                       maxLength={10}
                       minLength={10}
                       required
-                      className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
+                      className={`mt-1 block w-full px-3 py-2 bg-white border rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500 ${errors.phoneNumber ? 'border-red-500' : 'border-gray-300'}`}
                     />
+                    {errors.phoneNumber && (
+                      <p className="mt-1 text-sm text-red-500">{errors.phoneNumber}</p>
+                    )}
                   </div>
                   <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                      Password <span className="text-red-500">*</span>
-                    </label>
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
                     <input
                       type="password"
                       id="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter your password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInput}
                       required
                       className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
                     />
@@ -316,7 +406,7 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
                   <Button
                     type="submit"
                     className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white py-2 rounded-md hover:from-indigo-600 hover:to-blue-600 transition-all duration-200"
-                    disabled={isLoading || !phoneNumber || !password}
+                    disabled={isLoading}
                   >
                     {isLoading ? (
                       <div className="flex items-center justify-center">
@@ -329,15 +419,16 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
                   </Button>
                 </form>
               ) : (
-                // Signup form with OTP verification
+                // Signup form with phone verification
                 <form onSubmit={handleSendOtp} className="space-y-4">
                   <div>
                     <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
                     <input
                       type="tel"
                       id="phoneNumber"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      name="phoneNumber"
+                      value={formData.phoneNumber}
+                      onChange={handleInput}
                       pattern="[0-9]{10}"
                       placeholder="1234567890"
                       maxLength={10}
@@ -363,20 +454,26 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
                 </form>
               )}
             </>
-          )}
-
-          {step === 'otp' && (
+          )}          {step === 'otp' && (
             <form onSubmit={handleVerifyOtp} className="space-y-4">
               <div>
                 <label htmlFor="otp" className="block text-sm font-medium text-gray-700">Enter OTP</label>
                 <input
                   type="text"
                   id="otp"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
+                  name="otp"
+                  value={formData.otp}
+                  onChange={handleInput}
+                  pattern="[0-9]{6}"
+                  placeholder="Enter 6-digit OTP"
+                  maxLength={6}
+                  minLength={6}
                   required
-                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
+                  className={`mt-1 block w-full px-3 py-2 bg-white border rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500 ${errors.form ? 'border-red-500' : 'border-gray-300'}`}
                 />
+                {errors.form && (
+                  <p className="mt-1 text-sm text-red-500">{errors.form}</p>
+                )}
               </div>
               <Button
                 type="submit"
@@ -397,42 +494,100 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
 
           {step === 'details' && (
             <form onSubmit={handleSubmit} className="space-y-4">
-              {!isLogin && (
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInput}
+                  required
+                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email (Optional)</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInput}
+                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="role" className="block text-sm font-medium text-gray-700">I am a</label>
+                <select
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleInput}
+                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
+                >
+                  <option value="student">Student</option>
+                  <option value="owner">Accommodation Owner</option>
+                </select>
+              </div>
+
+              {formData.role === 'owner' && (
                 <>
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
+                    <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">Company Name</label>
                     <input
                       type="text"
-                      id="name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      id="companyName"
+                      name="companyName"
+                      value={formData.companyName}
+                      onChange={handleInput}
                       required
                       className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
                     />
                   </div>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email (Optional)</label>
+                    <label htmlFor="businessRegistration" className="block text-sm font-medium text-gray-700">Business Registration Number</label>
                     <input
-                      type="email"
-                      id="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      type="text"
+                      id="businessRegistration"
+                      name="businessRegistration"
+                      value={formData.businessRegistration}
+                      onChange={handleInput}
+                      required
                       className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
                     />
                   </div>
                 </>
               )}
+
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
                 <input
                   type="password"
                   id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInput}
                   required
                   className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
                 />
               </div>
+
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirm Password</label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleInput}
+                  required
+                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500"
+                />
+              </div>
+
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white py-2 rounded-md hover:from-indigo-600 hover:to-blue-600 transition-all duration-200"
@@ -441,24 +596,36 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
                 {isLoading ? (
                   <div className="flex items-center justify-center">
                     <Loader className="animate-spin -ml-1 mr-3 h-5 w-5" />
-                    <span>{isLogin ? 'Signing in...' : 'Creating account...'}</span>
+                    <span>Creating account...</span>
                   </div>
                 ) : (
-                  isLogin ? 'Sign In' : 'Create Account'
+                  'Create Account'
                 )}
               </Button>
             </form>
-          )}          <div className="mt-6 text-center">
+          )}
+
+          {/* Toggle between login and signup */}
+          <div className="mt-6 text-center">
             <button
               onClick={() => {
                 setIsLogin(!isLogin);
                 setStep('phone');
                 setError('');
-                setPhoneNumber('');
-                setPassword('');
-                setName('');
-                setEmail('');
-                setOtp('');
+                setFormData({
+                  phoneNumber: '',
+                  name: '',
+                  email: '',
+                  password: '',
+                  confirmPassword: '',
+                  role: 'student',
+                  companyName: '',
+                  businessRegistration: '',
+                  adminCode: '',
+                  otp: '',
+                  isPhoneVerified: false,
+                  isEmailVerified: false
+                });
               }}
               className="text-sm text-indigo-600 hover:text-indigo-500"
             >
