@@ -69,7 +69,9 @@ const AddAccommodationPage: React.FC = () => {
       
       try {
         const token = localStorage.getItem('token');
+
         const response = await fetch('https://waytopg.onrender.com/api/admin/users', {
+
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'

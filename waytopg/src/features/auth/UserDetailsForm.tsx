@@ -51,6 +51,7 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({ phoneNumber }) => {
     setError('');
 
     try {
+
       const response = await fetch('https://waytopg.onrender.com/api/auth/complete-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

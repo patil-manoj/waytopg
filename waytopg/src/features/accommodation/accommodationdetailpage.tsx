@@ -45,6 +45,7 @@ const AccommodationDetailPage: React.FC = () => {
       setIsLoading(true);
       setError(null);
       try {
+
         const response = await fetch(`https://waytopg.onrender.com/api/accommodations/${id}`);
         
         if (!response.ok) {
@@ -95,6 +96,7 @@ const AccommodationDetailPage: React.FC = () => {
         alert('Please login to book accommodation');
         return;
       }
+
 
       const response = await fetch('https://waytopg.onrender.com/api/student/book', {
         method: 'POST',
