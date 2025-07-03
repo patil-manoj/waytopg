@@ -37,8 +37,9 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
+// Health check endpoint
 app.get('/ping', (req, res) => {
-  res.send('pong');
+  res.status(200).json({ message: 'Server is up and running' });
 });
 
 const PORT = process.env.PORT || 5001;

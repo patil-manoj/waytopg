@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -29,6 +29,7 @@ interface Accommodation {
 
 const AccommodationDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [accommodation, setAccommodation] = useState<Accommodation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -77,43 +78,41 @@ const AccommodationDetailPage: React.FC = () => {
   }, [id]);
 
   const handleBooking = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert('Please login to save accommodation details');
+      // First make a ping request to wake up the server
+      await fetch('https://waytopg.onrender.com/ping');
+      
+      const response = await fetch(`https://waytopg.onrender.com/api/accommodations/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.status === 401) {
+        // Token is invalid or expired
+        localStorage.removeItem('token');
+        localStorage.removeItem('userRole');
+        navigate('/login');
         return;
       }
 
-      const response = await fetch('https://waytopg.onrender.com/api/student/book', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          accommodation: id
-        })
-      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch accommodation details');
+      }
 
       const data = await response.json();
-      
-      if (response.ok) {
-        alert('Your details have been saved! The owner will contact you soon.');
-        window.location.reload();
-      } else {
-        // Display the specific error message from the server
-        alert(data.message || 'Error saving details. Please try again.');
-        
-        // If the error is related to authentication, redirect to login
-        if (response.status === 401 || response.status === 403) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('userRole');
-          window.location.href = '/login';
-        }
-      }
+      // Handle the data as needed
+      console.log('Accommodation details:', data);
     } catch (error) {
-      console.error('Error saving accommodation details:', error);
-      alert('Error saving details. Please try again.');
+      console.error('Error fetching accommodation details:', error);
+      // Handle error appropriately
     }
   };
 
