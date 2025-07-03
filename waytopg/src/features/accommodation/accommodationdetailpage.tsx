@@ -35,6 +35,7 @@ const AccommodationDetailPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showPopup, setShowPopup] = useState(false);
 
   // Image modal state
 
@@ -85,18 +86,18 @@ const AccommodationDetailPage: React.FC = () => {
     }
 
     try {
-      // First make a ping request to wake up the server
-      await fetch('https://waytopg.onrender.com/ping');
-      
-      const response = await fetch(`https://waytopg.onrender.com/api/accommodations/${id}`, {
+      const response = await fetch('https://waytopg.onrender.com/api/accommodations/request-details', {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({
+          accommodationId: id
+        })
       });
 
       if (response.status === 401) {
-        // Token is invalid or expired
         localStorage.removeItem('token');
         localStorage.removeItem('userRole');
         navigate('/login');
@@ -104,15 +105,15 @@ const AccommodationDetailPage: React.FC = () => {
       }
 
       if (!response.ok) {
-        throw new Error('Failed to fetch accommodation details');
+        throw new Error('Failed to send request');
       }
 
-      const data = await response.json();
-      // Handle the data as needed
-      console.log('Accommodation details:', data);
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 3000); // Hide popup after 3 seconds
+
     } catch (error) {
-      console.error('Error fetching accommodation details:', error);
-      // Handle error appropriately
+      console.error('Error sending request:', error);
+      setError('Failed to send request. Please try again later.');
     }
   };
 
@@ -199,6 +200,14 @@ const AccommodationDetailPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-white flex flex-col">
       <Navbar />
       <main className="flex-grow container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+        {showPopup && (
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl z-50">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Request Sent!</h3>
+              <p className="text-gray-600">The owner will contact you soon.</p>
+            </div>
+          </div>
+        )}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           {/* Image Gallery */}
           <div className="relative">
