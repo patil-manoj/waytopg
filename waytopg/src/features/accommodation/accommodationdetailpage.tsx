@@ -107,7 +107,8 @@ const AccommodationDetailPage: React.FC = () => {
       }
 
       if (!response.ok) {
-        throw new Error('Failed to send request');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to send request');
       }
 
       setShowPopup(true);
@@ -116,6 +117,8 @@ const AccommodationDetailPage: React.FC = () => {
     } catch (error) {
       console.error('Error sending request:', error);
       setError('Failed to send request. Please try again later.');
+    } finally {
+      setIsSendingRequest(false);
     }
   };
 

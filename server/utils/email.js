@@ -3,14 +3,14 @@ import nodemailer from 'nodemailer';
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'care.way2pg@gmail.com',
-    pass: 'idxs nvyv ptsv valh' // Add this to your .env file
+    user: process.env.EMAIL_USER || 'care.way2pg@gmail.com',
+    pass: process.env.EMAIL_PASS || 'idxs nvyv ptsv valh' // Add this to your .env file
   }
 });
 
 export const sendOwnerNotification = async (ownerEmail, studentDetails) => {
   const mailOptions = {
-    from: 'care.way2pg@gmail.com',
+    from: process.env.EMAIL_USER || 'care.way2pg@gmail.com',
     to: ownerEmail,
     subject: 'New Accommodation Request - Way2PG',
     html: `
