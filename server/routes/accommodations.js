@@ -1,5 +1,5 @@
 import express from 'express';
-import auth from '../middleware/auth.js';
+import { auth } from '../middleware/auth.js';
 import Accommodation from '../models/Accommodation.js';
 import User from '../models/user.js';
 import { sendOwnerNotification } from '../utils/email.js';
