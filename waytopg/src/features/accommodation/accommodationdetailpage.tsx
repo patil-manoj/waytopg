@@ -27,7 +27,7 @@ interface Accommodation {
   rules?: string[];
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://waytopg.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://waytopg-backend.onrender.com';
 
 const AccommodationDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
