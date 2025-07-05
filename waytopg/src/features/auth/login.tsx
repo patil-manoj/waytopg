@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import Button from '@/components/Button';
 import Navbar from '@/components/navbar';
 import { Loader } from 'lucide-react';
+import api from '@/utils/api/axios';
 
 const LoginPage: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -18,39 +19,29 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     setError('');
     try {
-
-      const response = await fetch('https://waytopg.onrender.com/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber, password }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userRole', data.role);
-        
-        // Redirect based on role
-        switch (data.role) {
-          case 'student':
-            navigate('/');
-            break;
-          case 'owner':
-            navigate('/owner-dashboard');
-            break;
-          case 'admin':
-            navigate('/admin-dashboard');
-            break;
-          default:
-            navigate('/');
-        }
-      } else {
-        setError(data.message || 'An error occurred during login');
+      const { data } = await api.post('/auth/login', { phoneNumber, password });
+      
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userRole', data.role);
+      
+      // Redirect based on role
+      switch (data.role) {
+        case 'student':
+          navigate('/');
+          break;
+        case 'owner':
+          navigate('/owner-dashboard');
+          break;
+        case 'admin':
+          navigate('/admin-dashboard');
+          break;
+        default:
+          navigate('/');
       }
     } catch (error) {
       console.error('Login error:', error);
-      setError('An error occurred during login');
-    }
-    finally {
+      setError('Invalid credentials or an error occurred during login');
+    } finally {
       setIsLoading(false);
     }
   };

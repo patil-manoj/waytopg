@@ -7,6 +7,7 @@ import Footer from '@/components/Footer';
 import Button from '@/components/Button';
 import Navbar from '@/components/navbar';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import api from '@/utils/api/axios';
 
 interface Accommodation {
   _id: string;
@@ -35,41 +36,9 @@ const OwnerDashboard: React.FC = () => {
 
     try {
       setDeletingIds(prev => new Set(prev).add(id));
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        setError('Authentication token not found');
-        return;
-      }
-
-      console.log('Deleting accommodation:', { id });
-      
-
-      const response = await fetch(`https://waytopg.onrender.com/api/owner/accommodations/${id}`, {
-
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      console.log('Delete response:', {
-        status: response.status,
-        statusText: response.statusText
-      });
-
-      if (response.ok) {
-        setAccommodations(prev => prev.filter(acc => acc._id !== id));
-        setError(null); // Clear any previous errors
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Failed to delete accommodation:', {
-          status: response.status,
-          error: errorData
-        });
-        setError(errorData.message || `Failed to delete accommodation (${response.status})`);
-      }
+      await api.delete(`/owner/accommodations/${id}`);
+      setAccommodations(prev => prev.filter(acc => acc._id !== id));
+      setError(null);
     } catch (error) {
       console.error('Error deleting accommodation:', error);
       setError('An error occurred while deleting the accommodation');
@@ -87,48 +56,11 @@ const OwnerDashboard: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const token = localStorage.getItem('token');
-        const userRole = localStorage.getItem('userRole');
-        
-        console.log('Fetching accommodations with:', {
-          token: token ? 'exists' : 'missing',
-          userRole
-        });
-
-        if (!token) {
-          setError('No authentication token found');
-          return;
-        }
-
-
-        const response = await fetch('https://waytopg.onrender.com/api/owner/accommodations', {
-
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        console.log('API Response:', {
-          status: response.status,
-          statusText: response.statusText
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Accommodations data:', data);
-          setAccommodations(Array.isArray(data) ? data : data.accommodations || []);
-        } else {
-          const errorData = await response.json().catch(() => ({}));
-          console.error('Failed to fetch accommodations:', {
-            status: response.status,
-            error: errorData
-          });
-          setError(errorData.message || `Failed to fetch accommodations (${response.status})`);
-        }
+        const { data } = await api.get('/owner/accommodations');
+        setAccommodations(data.accommodations || []);
       } catch (error) {
         console.error('Error fetching accommodations:', error);
-        setError('An error occurred while fetching accommodations');
+        setError('Failed to load accommodations');
       } finally {
         setLoading(false);
       }
