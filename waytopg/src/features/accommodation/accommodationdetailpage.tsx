@@ -90,13 +90,14 @@ const AccommodationDetailPage: React.FC = () => {
 
     setIsSendingRequest(true);
     try {
-      await api.post('/accommodations/request-details', {
+      const response = await api.post('/accommodations/request-details', {
         accommodationId: id
       });
 
-      setShowPopup(true);
-      setTimeout(() => setShowPopup(false), 3000); // Hide popup after 3 seconds
-
+      if (response.status === 200) {
+        setShowPopup(true);
+        setTimeout(() => setShowPopup(false), 3000); // Hide popup after 3 seconds
+      }
     } catch (error: any) {
       console.error('Error sending request:', error);
       if (error.response?.status === 401) {
