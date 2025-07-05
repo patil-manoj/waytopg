@@ -266,7 +266,8 @@ const EditAccommodationPage: React.FC = () => {
         formDataToSend.append('images', newFile);
       });
 
-      const response = await api.put(`/owner/accommodations/${id}`, formDataToSend);
+      const { data } = await api.put(`/owner/accommodations/${id}`, formDataToSend);
+      console.log('Accommodation updated successfully:', data);
 
       navigate('/owner-dashboard');
     } catch (error) {
