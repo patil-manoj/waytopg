@@ -7,6 +7,7 @@ import { MapPin, Star, Wifi, Tv, Users, Utensils, Car, Snowflake, BookOpen, Chev
   Fan, Bath, Wind, ShieldCheck, Package, Home, Zap, ArrowUpDown, Video, Heater, Dumbbell } from 'lucide-react';
 import Navbar from '@/components/navbar';
 import api from '../../utils/api/axios';
+import { API_BASE_URL } from '@/constants';
 
 interface Accommodation {
   id: string;
@@ -27,8 +28,6 @@ interface Accommodation {
   roomType?: string;
   rules?: string[];
 }
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://waytopg-backend.onrender.com';
 
 const AccommodationDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -91,7 +90,7 @@ const AccommodationDetailPage: React.FC = () => {
 
     setIsSendingRequest(true);
     try {
-      await api.post('/api/accommodations/request-details', {
+      await api.post('/accommodations/request-details', {
         accommodationId: id
       });
 
