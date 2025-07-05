@@ -7,6 +7,7 @@ import { Loader } from 'lucide-react';
 import api from '@/utils/api/axios';
 import { auth } from '@/lib/firebase';
 import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+import { authService } from '@/services/auth.service';
 
 const LoginPage: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -82,9 +83,9 @@ const LoginPage: React.FC = () => {
         throw new Error('Phone number must be exactly 10 digits');
       }
 
-      // Check if phone number exists in our system
-      const response = await api.post('/auth/check-phone', { phoneNumber: formattedPhoneNumber });
-      if (!response.data.exists) {
+      // Check if phone number exists in our system using the auth service
+      const checkResult = await authService.checkPhoneExists(formattedPhoneNumber);
+      if (!checkResult.exists) {
         throw new Error('No account found with this phone number');
       }
 
