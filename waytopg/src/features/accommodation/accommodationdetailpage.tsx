@@ -6,6 +6,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { MapPin, Star, Wifi, Tv, Users, Utensils, Car, Snowflake, BookOpen, ChevronLeft, ChevronRight, 
   Fan, Bath, Wind, ShieldCheck, Package, Home, Zap, ArrowUpDown, Video, Heater, Dumbbell } from 'lucide-react';
 import Navbar from '@/components/navbar';
+import api from '../../utils/api/axios';
 
 interface Accommodation {
   id: string;
@@ -90,39 +91,22 @@ const AccommodationDetailPage: React.FC = () => {
 
     setIsSendingRequest(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/accommodations/request-details`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          accommodationId: id
-        })
+      await api.post('/api/accommodations/request-details', {
+        accommodationId: id
       });
 
-      if (response.status === 401) {
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 3000); // Hide popup after 3 seconds
+
+    } catch (error: any) {
+      console.error('Error sending request:', error);
+      if (error.response?.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('userRole');
         navigate('/login');
         return;
       }
-
-      if (response.status === 404) {
-        throw new Error('Service temporarily unavailable. Please try again later.');
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to send request');
-      }
-
-      setShowPopup(true);
-      setTimeout(() => setShowPopup(false), 3000); // Hide popup after 3 seconds
-
-    } catch (error) {
-      console.error('Error sending request:', error);
-      setError(error instanceof Error ? error.message : 'Failed to send request. Please try again later.');
+      setError(error.response?.data?.message || 'Failed to send request. Please try again later.');
     } finally {
       setIsSendingRequest(false);
     }
