@@ -6,6 +6,7 @@ import Button from '@/components/Button';
 import Navbar from '@/components/navbar';
 import { Search, MapPin, Star, RefreshCw, Loader } from 'lucide-react';
 import AuthPopup from '../auth/AuthPopup';
+import { API_BASE_URL } from '@/constants';
 
 interface AccommodationResponse {
   _id: string;
@@ -52,7 +53,7 @@ const AccommodationListPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('https://waytopg.onrender.com/api/accommodations', {
+      const response = await fetch(`${API_BASE_URL}/accommodations`, {
         headers: {
           'Content-Type': 'application/json'
         }
