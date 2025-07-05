@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Footer from '@/components/Footer';
 import Button from '@/components/Button';
 import Navbar from '@/components/navbar';
+import { API_BASE_URL } from '@/constants';
 
 const OwnerLoginPage: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -14,7 +15,7 @@ const OwnerLoginPage: React.FC = () => {
     e.preventDefault();
     try {
 
-      const response = await fetch('https://waytopg.onrender.com/api/auth/owner-login', {
+      const response = await fetch(`${API_BASE_URL}/auth/owner-login`, {
 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

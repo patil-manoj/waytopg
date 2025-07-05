@@ -48,10 +48,9 @@ app.get('/api/test', (req, res) => {
 // app.use(cors());
 app.use(cors({
   origin: [
-    'https://waytopg.netlify.app',
-    'https://waytopgdev.netlify.app',
-    'http://localhost:5173',
-    'https://waytopg.onrender.com'
+    process.env.VITE_FRONTEND_URL,
+    process.env.VITE_FRONTEND_DEV_URL,
+    process.env.VITE_API_BASE_URL
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
