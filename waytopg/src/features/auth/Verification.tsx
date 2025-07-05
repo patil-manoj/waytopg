@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Loader } from 'lucide-react';
+import { API_URL } from '@/constants';
 
 interface VerificationFormProps {
   onClose: () => void;
@@ -22,7 +23,7 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ onClose }) => {
       setError('');
       const token = localStorage.getItem('token');
 
-      const response = await fetch('https://waytopg.onrender.com/api/auth/send-email-verification', {
+      const response = await fetch(`${API_URL}/auth/send-email-verification`, {
 
         method: 'POST',
         headers: {
@@ -52,7 +53,7 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ onClose }) => {
       setError('');
       const token = localStorage.getItem('token');
 
-      const response = await fetch('https://waytopg.onrender.com/api/auth/send-phone-verification', {
+      const response = await fetch(`${API_URL}/auth/send-phone-verification`, {
 
         method: 'POST',
         headers: {
@@ -82,7 +83,7 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ onClose }) => {
       setError('');
       const token = localStorage.getItem('token');
 
-      const response = await fetch('https://waytopg.onrender.com/api/auth/verify-email', {
+      const response = await fetch(`${API_URL}/auth/verify-email`, {
 
         method: 'POST',
         headers: {
@@ -113,7 +114,7 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ onClose }) => {
       setError('');
       const token = localStorage.getItem('token');
 
-      const response = await fetch('https://waytopg.onrender.com/api/auth/verify-phone', {
+      const response = await fetch(`${API_URL}/auth/verify-phone`, {
 
         method: 'POST',
         headers: {

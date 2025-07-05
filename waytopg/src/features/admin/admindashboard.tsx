@@ -5,6 +5,7 @@ import Navbar from '@/components/navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/Button';
 import type { User, DashboardStats } from '@/types';
+import { API_URL } from '@/constants';
 
 const AdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -46,9 +47,7 @@ const AdminDashboard: React.FC = () => {
         return;
       }
 
-
-      const response = await fetch('https://waytopg.onrender.com/api/admin/accommodations', {
-
+      const response = await fetch(`${API_URL}/admin/accommodations`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -82,8 +81,7 @@ const AdminDashboard: React.FC = () => {
       setDeletingIds(prev => new Set(prev).add(accommodationId));
       const token = localStorage.getItem('token');
 
-      const response = await fetch(`https://waytopg.onrender.com/api/admin/accommodations/${accommodationId}`, {
-
+      const response = await fetch(`${API_URL}/admin/accommodations/${accommodationId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -116,7 +114,7 @@ const AdminDashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      setError(null); // Clear any previous errors
+      setError(null);
       
       const token = localStorage.getItem('token');
       const userRole = localStorage.getItem('userRole');
@@ -131,19 +129,14 @@ const AdminDashboard: React.FC = () => {
         return;
       }
       
-      // Fetch users and stats in parallel
       const [usersResponse, statsResponse] = await Promise.all([
-
-        fetch('https://waytopg.onrender.com/api/admin/users', {
-
+        fetch(`${API_URL}/admin/users`, {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         }),
-
-        fetch('https://waytopg.onrender.com/api/admin/stats', {
-
+        fetch(`${API_URL}/admin/stats`, {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -211,8 +204,7 @@ const AdminDashboard: React.FC = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
 
-      const response = await fetch(`https://waytopg.onrender.com/api/admin/approve-owner/${userId}`, {
-
+      const response = await fetch(`${API_URL}/admin/approve-owner/${userId}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -246,8 +238,7 @@ const AdminDashboard: React.FC = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
 
-      const response = await fetch(`https://waytopg.onrender.com/api/admin/users/${userId}`, {
-
+      const response = await fetch(`${API_URL}/admin/users/${userId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -462,7 +453,7 @@ const AdminDashboard: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            ${accommodation.price.toLocaleString()}<span className="text-gray-500 text-xs">/month</span>
+                            ₹{accommodation.price.toLocaleString()}<span className="text-gray-500 text-xs">/month</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">

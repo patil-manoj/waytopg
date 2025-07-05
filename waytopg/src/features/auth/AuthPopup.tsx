@@ -8,7 +8,7 @@ import { API_BASE_URL } from '@/constants';
 
 declare global {
   interface Window {
-    recaptchaVerifier: RecaptchaVerifier;
+    recaptchaVerifier: RecaptchaVerifier | undefined;
   }
 }
 

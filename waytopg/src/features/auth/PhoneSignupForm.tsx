@@ -7,7 +7,7 @@ import { authService } from '@/services/auth.service';
 
 declare global {
   interface Window {
-    recaptchaVerifier: RecaptchaVerifier;
+    recaptchaVerifier: RecaptchaVerifier | undefined;
   }
 }
 

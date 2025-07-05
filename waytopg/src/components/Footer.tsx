@@ -21,8 +21,8 @@ const Footer: React.FC = () => {
           </div>
           <div>
             <h4 className="text-xl font-semibold mb-4">Contact Us</h4>
-            <p className="text-blue-100">Email: info@way2pg.com</p>
-            <p className="text-blue-100">Phone: +1 (123) 456-7890</p>
+            <p className="text-blue-100">Email: care.way2pg@gmail.com</p>
+            <p className="text-blue-100">Phone: +91 7353565671</p>
             <div className="mt-4 flex space-x-4">
               {/* Add social media icons here */}
             </div>

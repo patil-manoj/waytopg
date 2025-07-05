@@ -288,7 +288,7 @@ const AccommodationListPage: React.FC = () => {
                   <div className="border-t border-gray-100 pt-4">
                     <div className="flex justify-between items-center">
                       <div>
-                        <span className="text-2xl font-bold text-blue-600">${accommodation.price}</span>
+                        <span className="text-2xl font-bold text-blue-600">₹{accommodation.price}</span>
                         <span className="text-gray-500 text-sm">/month</span>
                       </div>
                       <Button 

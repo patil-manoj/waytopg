@@ -117,7 +117,7 @@ const OwnerDashboard: React.FC = () => {
                       </div>
                     </td>
                     <td className="py-2 px-4">{accommodation.address}</td>
-                    <td className="py-2 px-4">${accommodation.price}/month</td>
+                    <td className="py-2 px-4">₹{accommodation.price}/month</td>
                     <td className="py-2 px-4">
                       <Button 
                         variant="secondary" 
