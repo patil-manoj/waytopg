@@ -8,6 +8,8 @@ import { Home, MapPin, IndianRupee, Upload, Plus, Minus, Loader, Wifi, Tv, Car,
 import Footer from '@/components/Footer';
 import Button from '@/components/Button';
 import Navbar from '@/components/navbar';
+import api from '@/utils/api/axios';
+import { API_URL } from '@/constants';
 
 interface AmenityOption {
   id: string;
@@ -68,22 +70,9 @@ const AddAccommodationPage: React.FC = () => {
       if (!isAdmin) return;
       
       try {
-        const token = localStorage.getItem('token');
+        const response = await api.get('/admin/users');
 
-        const response = await fetch('https://waytopg.onrender.com/api/admin/users', {
-
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch owners');
-        }
-
-        const data = await response.json();
-        const { users } = data;
+        const { data: { users } } = response;
         setOwners(users.filter((user: Owner) => user.role === 'owner' && user.isApproved));
       } catch (error) {
         console.error('Error fetching owners:', error);
@@ -266,13 +255,9 @@ const AddAccommodationPage: React.FC = () => {
     
     setIsLoading(true);
     setError('');
+    const token = localStorage.getItem('token');
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Authentication token not found');
-      }
-
       const formDataToSend = new FormData();
       
       // Convert form data to the correct types before sending
@@ -308,9 +293,7 @@ const AddAccommodationPage: React.FC = () => {
       });
 
       // Use different endpoints for admin and owner
-      const endpoint = isAdmin ? 
-        'https://waytopg.onrender.com/api/admin/accommodations' :
-        'https://waytopg.onrender.com/api/owner/accommodations';
+      const endpoint = `${API_URL}/${isAdmin ? 'admin' : 'owner'}/accommodations`;
 
       const response = await fetch(endpoint, {
         method: 'POST',

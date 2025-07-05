@@ -6,7 +6,7 @@ import Button from '@/components/Button';
 import Navbar from '@/components/navbar';
 import { Search, MapPin, Star, RefreshCw, Loader } from 'lucide-react';
 import AuthPopup from '../auth/AuthPopup';
-import { API_BASE_URL } from '@/constants';
+import api from '@/utils/api/axios';
 
 interface AccommodationResponse {
   _id: string;
@@ -53,18 +53,8 @@ const AccommodationListPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${API_BASE_URL}/accommodations`, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to fetch accommodations');
-      }
-
-      const data: AccommodationResponse[] = await response.json();
+      const response = await api.get('/accommodations');
+      const data = response.data;
       
       if (!Array.isArray(data)) {
         throw new Error('Invalid data format received from server');

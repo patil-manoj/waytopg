@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import type { Booking } from '@/types';
+import api from '@/utils/api/axios';
 
 const UserDashboard: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -14,27 +15,10 @@ const UserDashboard: React.FC = () => {
 
   const fetchBookings = React.useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-
       setLoading(true);
       setError(null);
 
-      const response = await fetch('https://waytopg.onrender.com/api/student/bookings', {
-
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch bookings');
-      }
-
-      const data = await response.json();
+      const { data } = await api.get('/student/bookings');
       setBookings(data);
     } catch (error) {
       console.error('Error fetching bookings:', error);
@@ -54,20 +38,7 @@ const UserDashboard: React.FC = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-
-      const response = await fetch(`https://waytopg.onrender.com/api/student/bookings/${bookingId}/cancel`, {
-
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to cancel booking');
-      }
+      await api.put(`/student/bookings/${bookingId}/cancel`);
 
       // Update the booking status in the UI
       setBookings(bookings.map(booking => 
@@ -75,7 +46,6 @@ const UserDashboard: React.FC = () => {
           ? { ...booking, status: 'cancelled' as const }
           : booking
       ));
-
     } catch (error) {
       console.error('Error cancelling booking:', error);
       alert('Failed to cancel booking. Please try again.');

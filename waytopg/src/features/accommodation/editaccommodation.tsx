@@ -8,6 +8,7 @@ import { Home, MapPin, IndianRupee, Upload, Plus, Minus, Loader, Wifi, Tv, Car,
 import Footer from '@/components/Footer';
 import Button from '@/components/Button';
 import Navbar from '@/components/navbar';
+import api from '@/utils/api/axios';
 
 interface AmenityOption {
   id: string;
@@ -70,24 +71,8 @@ const EditAccommodationPage: React.FC = () => {
     const fetchAccommodation = async () => {
       try {
         setIsLoading(true);
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('Authentication token not found');
-        }
-
-
-        const response = await fetch(`https://waytopg.onrender.com/api/owner/accommodations/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        const data = await response.json();
+        const { data } = await api.get(`/owner/accommodations/${id}`);
         
-        if (!response.ok) {
-          throw new Error(data.message || 'Failed to fetch accommodation details');
-        }
         setFormData({
           name: data.name || '',
           description: data.description || '',
@@ -244,11 +229,6 @@ const EditAccommodationPage: React.FC = () => {
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Authentication token not found');
-      }
-
       const formDataToSend = new FormData();
       
       // Convert form data to the correct types before sending
@@ -286,19 +266,8 @@ const EditAccommodationPage: React.FC = () => {
         formDataToSend.append('images', newFile);
       });
 
-      const response = await fetch(`https://waytopg.onrender.com/api/owner/accommodations/${id}`, {
-
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formDataToSend,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Failed to update accommodation (${response.status})`);
-      }
+      const { data } = await api.put(`/owner/accommodations/${id}`, formDataToSend);
+      console.log('Accommodation updated successfully:', data);
 
       navigate('/owner-dashboard');
     } catch (error) {
