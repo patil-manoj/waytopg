@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { HelmetProvider } from 'react-helmet-async';
 import ScrollToTop from "@/components/ScrollToTop";
+import { API_BASE_URL } from "@/constants";
 
 // Page components
 import HomePage from "@/components/home";
@@ -29,7 +30,7 @@ const NotFoundPage = lazy(() => import("@/components/NotFound"));
 function App() {
   useEffect(() => {
     // Ping the backend to wake up the Render instance
-    fetch(`${API_URL_NO_SUFFIX}/ping`)
+    fetch(`${API_BASE_URL}/ping`)
       .catch(error => console.log('Backend wake-up ping failed:', error));
   }, []);
 
