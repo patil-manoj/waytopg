@@ -69,6 +69,18 @@ export const authService = {
     }
   },
 
+  resetPassword: async (phoneNumber: string, newPassword: string) => {
+    try {
+      const response = await api.post('/auth/reset-password', { phoneNumber, newPassword });
+      return response.data;
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        throw new Error(error.response?.data?.message || 'Password reset failed');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  },
+
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userRole');
