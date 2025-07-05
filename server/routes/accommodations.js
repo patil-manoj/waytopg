@@ -47,7 +47,7 @@ router.get('/:id', async (req, res) => {
 router.post('/request-details', auth, async (req, res) => {
   logger.info('Received request for accommodation details', { 
     body: req.body,
-    userId: req.user?.id,
+    userId: req.user?.userId,
     headers: req.headers 
   });
 
@@ -59,10 +59,10 @@ router.post('/request-details', auth, async (req, res) => {
       return res.status(400).json({ message: 'accommodationId is required' });
     }
 
-    const student = await User.findById(req.user.user._id);
+    const student = await User.findById(req.user.userId);
     
     if (!student) {
-      logger.warn('Student not found', { userId: req.user.user._id });
+      logger.warn('Student not found', { userId: req.user.userId });
       return res.status(404).json({ message: 'Student not found' });
     }
 
