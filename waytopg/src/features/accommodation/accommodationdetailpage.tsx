@@ -48,7 +48,7 @@ const AccommodationDetailPage: React.FC = () => {
       setError(null);
       try {
 
-        const response = await fetch(`${API_BASE_URL}/api/accommodations/${id}`);
+        const response = await fetch(`${API_BASE_URL}/accommodations/${id}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch accommodation details');
