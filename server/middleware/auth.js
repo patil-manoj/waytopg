@@ -30,7 +30,11 @@ export const auth = async (req, res, next) => {
       return res.status(401).json({ message: 'Token role mismatch' });
     }
 
-    req.user = user;
+    req.user = {
+      userId: user._id,
+      role: user.role,
+      ...user.toObject()
+    };
     next();
   } catch (error) {
     res.status(401).json({ message: 'Please authenticate' });

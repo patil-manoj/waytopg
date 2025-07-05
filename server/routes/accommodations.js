@@ -59,10 +59,10 @@ router.post('/request-details', auth, async (req, res) => {
       return res.status(400).json({ message: 'accommodationId is required' });
     }
 
-    const student = await User.findById(req.user.userId);
+    const student = await User.findById(req.user._id);
     
     if (!student) {
-      logger.warn('Student not found', { userId: req.user.userId });
+      logger.warn('Student not found', { userId: req.user._id });
       return res.status(404).json({ message: 'Student not found' });
     }
 

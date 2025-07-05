@@ -90,7 +90,7 @@ const AccommodationDetailPage: React.FC = () => {
 
     setIsSendingRequest(true);
     try {
-      const response = await api.post('/accommodations/request-details', {
+      const response = await api.post('accommodations/request-details', {
         accommodationId: id
       });
 
