@@ -6,6 +6,7 @@ import PhoneSignupForm from './PhoneSignupForm';
 import Navbar from '@/components/navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/Button';
+import { API_URL } from '@/constants';
 // import type { User } from '@/types';
 
 interface FormData {
@@ -97,7 +98,7 @@ export default function Signup() {
     try {
       setIsLoading(true);
 
-      const response = await fetch('https://waytopg.onrender.com/api/auth/signup', {
+      const response = await fetch(`${API_URL}/api/auth/signup`, {
 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Loader } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '@/constants';
 
 interface UserDetailsFormProps {
   phoneNumber: string;
@@ -51,8 +52,7 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({ phoneNumber }) => {
     setError('');
 
     try {
-
-      const response = await fetch('https://waytopg.onrender.com/api/auth/complete-signup', {
+      const response = await fetch(`${API_URL}/api/auth/complete-signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -7,6 +7,12 @@ import { Loader } from 'lucide-react';
 import api from '@/utils/api/axios';
 import { auth } from '@/lib/firebase';
 import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+
+declare global {
+  interface Window {
+    recaptchaVerifier: RecaptchaVerifier | undefined;
+  }
+}
 import { authService } from '@/services/auth.service';
 
 const LoginPage: React.FC = () => {
@@ -58,12 +64,22 @@ const LoginPage: React.FC = () => {
 
   const setupRecaptcha = () => {
     if (!window.recaptchaVerifier && auth) {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'invisible',
-        callback: () => {
-          // reCAPTCHA solved, allow signInWithPhoneNumber.
-        },
-      });
+      try {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          size: 'invisible',
+          callback: () => {
+            // reCAPTCHA solved, allow signInWithPhoneNumber.
+          },
+          'expired-callback': () => {
+            // Reset the reCAPTCHA
+            window.recaptchaVerifier = undefined;
+            setupRecaptcha();
+          }
+        });
+      } catch (error) {
+        console.error('RecaptchaVerifier setup error:', error);
+        throw new Error('Failed to setup phone verification. Please try again.');
+      }
     }
   };
 

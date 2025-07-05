@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User } from '@/types';
-import { API_BASE_URL } from '@/constants';
+import { API_URL } from '@/constants';
 
 export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -13,7 +13,7 @@ export const useAuth = () => {
     if (token) {
       setIsAuthenticated(true);
       // Fetch user data from your authentication service
-      fetch(`${API_BASE_URL}/auth/me`, {
+      fetch(`${API_URL}/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
