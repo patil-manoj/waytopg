@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { HelmetProvider } from 'react-helmet-async';
 import ScrollToTop from "@/components/ScrollToTop";
-import { API_URL_NO_SUFFIX } from "./constants";
 
 // Page components
 import HomePage from "@/components/home";
