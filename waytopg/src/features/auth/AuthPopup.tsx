@@ -156,7 +156,6 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
     setError('');
     
     try {
-
       if (!confirmationResult) {
         throw new Error('No OTP confirmation pending');
       }
@@ -170,6 +169,7 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
         
         if (response && response.token) {
           localStorage.setItem('token', response.token);
+          localStorage.setItem('userRole', response.role);
           onClose();
           window.location.reload(); // Refresh to update auth state
         }
@@ -201,6 +201,7 @@ const AuthPopup: React.FC<AuthPopupProps> = ({ isOpen, onClose }) => {
         
         if (response && response.token) {
           localStorage.setItem('token', response.token);
+          localStorage.setItem('userRole', response.role);
           onClose();
           window.location.reload();
         }

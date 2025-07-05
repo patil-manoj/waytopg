@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { MapPin, Star, Wifi, Tv, Users, Utensils, Car, Snowflake, BookOpen, ChevronLeft, ChevronRight, 
-  Fan, Bath, Wind, ShieldCheck, Package, Home, Zap, ArrowUpDown, Video, Heater, Dumbbell } from 'lucide-react';
+  Fan, Bath, Wind, ShieldCheck, Package, Home, Zap, ArrowUpDown, Video, Heater, Dumbbell, Check } from 'lucide-react';
 import Navbar from '@/components/navbar';
+import api from '../../utils/api/axios';
+import { API_BASE_URL } from '@/constants';
 
 interface Accommodation {
   id: string;
@@ -25,18 +27,18 @@ interface Accommodation {
   city?: string;
   roomType?: string;
   rules?: string[];
-  mapLink?: string;
 }
 
 const AccommodationDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [accommodation, setAccommodation] = useState<Accommodation | null>(null);
-  const [checkInDate, setCheckInDate] = useState('');
-  const [checkOutDate, setCheckOutDate] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showPopup, setShowPopup] = useState(false);
+  const [isSendingRequest, setIsSendingRequest] = useState(false);
 
   // Image modal state
 
@@ -46,7 +48,7 @@ const AccommodationDetailPage: React.FC = () => {
       setError(null);
       try {
 
-        const response = await fetch(`https://waytopg.onrender.com/api/accommodations/${id}`);
+        const response = await fetch(`${API_BASE_URL}/accommodations/${id}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch accommodation details');
@@ -67,7 +69,6 @@ const AccommodationDetailPage: React.FC = () => {
           city: data.city,
           roomType: data.roomType,
           rules: data.rules || [],
-          mapLink: data.mapLink
         });
       } catch (error) {
         console.error('Error fetching accommodation:', error);
@@ -81,48 +82,33 @@ const AccommodationDetailPage: React.FC = () => {
   }, [id]);
 
   const handleBooking = async () => {
-    if (!checkInDate || !checkOutDate) {
-      alert('Please select check-in and check-out dates');
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
       return;
     }
-    if (new Date(checkInDate) >= new Date(checkOutDate)) {
-      alert('Check-out date must be after check-in date');
-      return;
-    }
-    
+
+    setIsSendingRequest(true);
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert('Please login to book accommodation');
-        return;
-      }
-
-
-      const response = await fetch('https://waytopg.onrender.com/api/student/book', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          accommodation: id,
-          checkIn: checkInDate,
-          checkOut: checkOutDate
-        })
+      const response = await api.post('accommodations/request-details', {
+        accommodationId: id
       });
 
-      const data = await response.json();
-      
-      if (response.ok) {
-        alert('Booking confirmed successfully!');
-        // Refresh the accommodation data to update status
-        window.location.reload();
-      } else {
-        alert(data.message || 'Error making booking. Please try again.');
+      if (response.status === 200) {
+        setShowPopup(true);
+        setTimeout(() => setShowPopup(false), 3000); // Hide popup after 3 seconds
       }
-    } catch (error) {
-      console.error('Error booking accommodation:', error);
-      alert('Error making booking. Please try again.');
+    } catch (error: any) {
+      console.error('Error sending request:', error);
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userRole');
+        navigate('/login');
+        return;
+      }
+      setError(error.response?.data?.message || 'Failed to send request. Please try again later.');
+    } finally {
+      setIsSendingRequest(false);
     }
   };
 
@@ -209,6 +195,33 @@ const AccommodationDetailPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-white flex flex-col">
       <Navbar />
       <main className="flex-grow container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+        {showPopup && (
+          <>
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 animate-in fade-in duration-200"
+              onClick={() => setShowPopup(false)}
+            />
+            {/* Popup */}
+            <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl z-50 p-6 min-w-[320px] animate-in zoom-in-95 duration-200">
+              <div className="text-center space-y-4">
+                <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <Check className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900">Request Sent!</h3>
+                  <p className="text-gray-600 mt-2">The owner will contact you soon.</p>
+                </div>
+                <button
+                  onClick={() => setShowPopup(false)}
+                  className="mt-4 w-full inline-flex justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-transparent rounded-md hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 transition-colors duration-200"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </>
+        )}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           {/* Image Gallery */}
           <div className="relative">
@@ -327,11 +340,11 @@ const AccommodationDetailPage: React.FC = () => {
             <div className="lg:col-span-2">
               <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-0 mb-4">
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold">{accommodation.name}</h1>
+                  <h1 className="text-2xl sm:text-3xl font-bold">{accommodation?.name}</h1>
                   <p className="text-gray-600 flex flex-wrap items-center mt-2">
                     <MapPin className="w-5 h-5 mr-2 flex-shrink-0" /> 
-                    <span className="break-words">{accommodation.address}
-                    {accommodation.city && `, ${accommodation.city}`}</span>
+                    <span className="break-words">{accommodation?.address}
+                    {accommodation?.city && `, ${accommodation?.city}`}</span>
                   </p>
                 </div>
                 <div className="flex items-center">
@@ -342,7 +355,7 @@ const AccommodationDetailPage: React.FC = () => {
 
               <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">Overview</h2>
-                <p className="text-gray-700">{accommodation.description}</p>
+                <p className="text-gray-700">{accommodation?.description}</p>
               </div>
               
               {/* Property Details */}
@@ -375,46 +388,6 @@ const AccommodationDetailPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold mb-4">Location</h2>
-                <div className="bg-gray-100 h-64 rounded-lg overflow-hidden relative">
-                  {accommodation.address ? (
-                    <div className="w-full h-full">
-                      <iframe
-                        src={`https://maps.google.com/maps?q=${encodeURIComponent(accommodation.address + ', ' + accommodation.city)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
-                        width="100%"
-                        height="100%"
-                        style={{ border: 0 }}
-                        allowFullScreen
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        title={`Location of ${accommodation.name}`}
-                        className="w-full h-full"
-                      ></iframe>
-                    </div>
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center flex-col">
-                      <MapPin className="w-12 h-12 text-gray-400 mb-2" />
-                      <p className="text-gray-500 text-center px-4">
-                        <span className="font-medium block mb-1">Location map unavailable</span>
-                        {accommodation.address}, {accommodation.city}
-                      </p>
-                    </div>
-                  )}
-                  {accommodation.mapLink && (
-                    <a
-                      href={accommodation.mapLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="absolute bottom-4 right-4 bg-white text-blue-600 px-4 py-2 rounded-full shadow-md hover:bg-blue-50 transition-colors duration-200 flex items-center"
-                    >
-                      <MapPin className="w-4 h-4 mr-2" />
-                      Open in Google Maps
-                    </a>
-                  )}
-                </div>
-              </div>
-
               {accommodation.rules && accommodation.rules.length > 0 && (
                 <div className="mb-6">
                   <h2 className="text-xl font-semibold mb-4">House Rules</h2>
@@ -425,16 +398,9 @@ const AccommodationDetailPage: React.FC = () => {
                   </ul>
                 </div>
               )}
-
-              {/* Owner Information */}
-              <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-                <h2 className="text-xl font-semibold mb-2">Property Owner</h2>
-                <p className="text-gray-700">{accommodation.owner.name}</p>
-                <p className="text-gray-600">{accommodation.owner.email}</p>
-              </div>
             </div>
             
-            {/* Right column: Sticky booking information */}
+            {/* Right column: Booking section */}
             <div className="lg:col-span-1">
               <div className="sticky top-4 space-y-6">
                 <div className="relative bg-gradient-to-r from-blue-500 to-purple-600 p-8 rounded-2xl shadow-xl overflow-hidden group">
@@ -454,104 +420,36 @@ const AccommodationDetailPage: React.FC = () => {
                     <h2 className="relative text-4xl font-bold mb-2 flex items-baseline text-blue-600">
                       <span className="flex items-center">
                         <span className="text-blue-700">$</span>
-                        <span>{accommodation.price}</span>
+                        <span>{accommodation?.price}</span>
                       </span>
                       <span className="text-lg font-medium text-blue-500 ml-2">/month</span>
                     </h2>
                     <div className="h-px bg-gradient-to-r from-blue-200 via-purple-200 to-blue-200 my-4"></div>
                   </div>
-                  <div className="space-y-4">
-                    <div className="relative group/date">
-                      <label htmlFor="checkIn" className="block text-sm font-semibold text-blue-700 mb-2 flex items-center">
-                        <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        Check-in Date
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="date"
-                          id="checkIn"
-                          value={checkInDate}
-                          onChange={(e) => setCheckInDate(e.target.value)}
-                          className="w-full px-4 py-3 bg-white border border-blue-200 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all duration-200 hover:border-blue-300 shadow-sm pl-10"
-                        />
-                        <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-white/50 via-transparent to-transparent rounded-lg group-hover/date:opacity-0 transition-opacity"></div>
-                      </div>
-                    </div>
-                    <div className="relative group/date">
-                      <label htmlFor="checkOut" className="block text-sm font-semibold text-blue-700 mb-2 flex items-center">
-                        <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        Check-out Date
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="date"
-                          id="checkOut"
-                          value={checkOutDate}
-                          onChange={(e) => setCheckOutDate(e.target.value)}
-                          className="w-full px-4 py-3 bg-white border border-blue-200 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all duration-200 hover:border-blue-300 shadow-sm pl-10"
-                        />
-                        <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-white/50 via-transparent to-transparent rounded-lg group-hover/date:opacity-0 transition-opacity"></div>
-                      </div>
-                    </div>
-                  </div>
+
                   <div className="mt-8 relative">
                     <Button 
                       onClick={handleBooking} 
                       className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold tracking-wide text-lg shadow-md hover:shadow-lg transition-all duration-300 py-3"
                       variant="primary"
                       size="large"
+                      disabled={isSendingRequest}
                     >
                       <span className="relative z-10 flex items-center justify-center gap-2">
-                        {localStorage.getItem('token') ? 'Book Now' : 'Login to Book'}
+                        {isSendingRequest ? (
+                          <>
+                            <svg className="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Sending Request...
+                          </>
+                        ) : (
+                          localStorage.getItem('token') ? 'Get Details' : 'Login to Get Details'
+                        )}
                       </span>
                     </Button>
-                    <div className="mt-4 text-sm text-blue-700 text-center font-medium relative">
-                      <div className="flex items-center justify-center space-x-2">
-                        <span>Free cancellation up to 48 hours before check-in</span>
-                      </div>
-                    </div>
                   </div>
-                </div>
-                <div className="bg-white/95 p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-100/20 backdrop-blur-sm">
-                  <h3 className="text-xl font-bold mb-6 text-blue-600">Why Book With Us?</h3>
-                  <ul className="space-y-4 text-gray-700">
-                    <li className="flex items-center bg-blue-50/50 p-3 rounded-lg">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <span className="font-medium">Best Price Guarantee</span>
-                    </li>
-                    <li className="flex items-center bg-blue-50/50 p-3 rounded-lg">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <span className="font-medium">24/7 Customer Support</span>
-                    </li>
-                    <li className="flex items-center bg-blue-50/50 p-3 rounded-lg">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <span className="font-medium">Verified Listings</span>
-                    </li>
-                    <li className="flex items-center bg-blue-50/50 p-3 rounded-lg">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
-                      </div>
-                      <span className="font-medium">Secure Payments</span>
-                    </li>
-                  </ul>
                 </div>
               </div>
             </div>
