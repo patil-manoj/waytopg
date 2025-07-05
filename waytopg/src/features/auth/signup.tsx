@@ -98,7 +98,7 @@ export default function Signup() {
     try {
       setIsLoading(true);
 
-      const response = await fetch(`${API_URL}/api/auth/signup`, {
+      const response = await fetch(`${API_URL}/auth/signup`, {
 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -231,7 +231,6 @@ export default function Signup() {
                     className={`mt-1 block w-full px-3 py-2 bg-white border rounded-md text-sm shadow-sm placeholder-gray-400
                       focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-purple-500
                       ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
-                    required
                   />
                   {errors.email && (
                     <p className="mt-1 text-sm text-red-500">{errors.email}</p>

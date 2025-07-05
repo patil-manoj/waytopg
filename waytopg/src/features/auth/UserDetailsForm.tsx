@@ -52,7 +52,7 @@ const UserDetailsForm: React.FC<UserDetailsFormProps> = ({ phoneNumber }) => {
     setError('');
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/complete-signup`, {
+      const response = await fetch(`${API_URL}/auth/complete-signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
