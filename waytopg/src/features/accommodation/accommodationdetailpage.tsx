@@ -196,10 +196,18 @@ const AccommodationDetailPage: React.FC = () => {
       <Navbar />
       <main className="flex-grow container mx-auto px-2 sm:px-4 py-4 sm:py-8">
         {showPopup && (
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl z-50">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Request Sent!</h3>
-              <p className="text-gray-600">The owner will contact you soon.</p>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-8 rounded-xl shadow-2xl transform transition-all duration-300 ease-in-out animate-fadeIn max-w-sm w-full mx-4">
+              <div className="text-center">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                  <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Request Sent Successfully!</h3>
+                <p className="text-gray-600 mb-4">The owner will contact you soon with more details about the accommodation.</p>
+                <div className="animate-pulse h-1 w-full bg-gradient-to-r from-green-500 to-blue-500 rounded"></div>
+              </div>
             </div>
           </div>
         )}
