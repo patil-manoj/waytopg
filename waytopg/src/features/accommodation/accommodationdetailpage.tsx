@@ -4,7 +4,7 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { MapPin, Star, Wifi, Tv, Users, Utensils, Car, Snowflake, BookOpen, ChevronLeft, ChevronRight, 
-  Fan, Bath, Wind, ShieldCheck, Package, Home, Zap, ArrowUpDown, Video, Heater, Dumbbell } from 'lucide-react';
+  Fan, Bath, Wind, ShieldCheck, Package, Home, Zap, ArrowUpDown, Video, Heater, Dumbbell, Check } from 'lucide-react';
 import Navbar from '@/components/navbar';
 import api from '../../utils/api/axios';
 import { API_BASE_URL } from '@/constants';
@@ -196,12 +196,31 @@ const AccommodationDetailPage: React.FC = () => {
       <Navbar />
       <main className="flex-grow container mx-auto px-2 sm:px-4 py-4 sm:py-8">
         {showPopup && (
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl z-50">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Request Sent!</h3>
-              <p className="text-gray-600">The owner will contact you soon.</p>
+          <>
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 animate-in fade-in duration-200"
+              onClick={() => setShowPopup(false)}
+            />
+            {/* Popup */}
+            <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl z-50 p-6 min-w-[320px] animate-in zoom-in-95 duration-200">
+              <div className="text-center space-y-4">
+                <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <Check className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900">Request Sent!</h3>
+                  <p className="text-gray-600 mt-2">The owner will contact you soon.</p>
+                </div>
+                <button
+                  onClick={() => setShowPopup(false)}
+                  className="mt-4 w-full inline-flex justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-transparent rounded-md hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 transition-colors duration-200"
+                >
+                  Close
+                </button>
+              </div>
             </div>
-          </div>
+          </>
         )}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           {/* Image Gallery */}
