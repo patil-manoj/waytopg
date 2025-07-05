@@ -453,7 +453,7 @@ const AdminDashboard: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            ${accommodation.price.toLocaleString()}<span className="text-gray-500 text-xs">/month</span>
+                            ₹{accommodation.price.toLocaleString()}<span className="text-gray-500 text-xs">/month</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">

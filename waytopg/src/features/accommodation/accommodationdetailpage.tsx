@@ -408,7 +408,7 @@ const AccommodationDetailPage: React.FC = () => {
                   <div className="relative">
                     <h2 className="relative text-4xl font-bold mb-2 flex items-baseline text-blue-600">
                       <span className="flex items-center">
-                        <span className="text-blue-700">$</span>
+                        <span className="text-blue-700">₹</span>
                         <span>{accommodation?.price}</span>
                       </span>
                       <span className="text-lg font-medium text-blue-500 ml-2">/month</span>
