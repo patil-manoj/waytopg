@@ -53,8 +53,8 @@ const AccommodationListPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const response = await api.get('/accommodations');
-      const { data } = response.data;
+      const response = await api.get('/api/accommodations');
+      const data = response.data;
       
       if (!Array.isArray(data)) {
         throw new Error('Invalid data format received from server');
