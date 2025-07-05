@@ -27,6 +27,8 @@ interface Accommodation {
   rules?: string[];
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://waytopg.onrender.com';
+
 const AccommodationDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -46,7 +48,7 @@ const AccommodationDetailPage: React.FC = () => {
       setError(null);
       try {
 
-        const response = await fetch(`https://waytopg.onrender.com/api/accommodations/${id}`);
+        const response = await fetch(`${API_BASE_URL}/api/accommodations/${id}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch accommodation details');
@@ -88,7 +90,7 @@ const AccommodationDetailPage: React.FC = () => {
 
     setIsSendingRequest(true);
     try {
-      const response = await fetch('https://waytopg.onrender.com/api/accommodations/request-details', {
+      const response = await fetch(`${API_BASE_URL}/api/accommodations/request-details`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -106,6 +108,10 @@ const AccommodationDetailPage: React.FC = () => {
         return;
       }
 
+      if (response.status === 404) {
+        throw new Error('Service temporarily unavailable. Please try again later.');
+      }
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || 'Failed to send request');
@@ -116,7 +122,7 @@ const AccommodationDetailPage: React.FC = () => {
 
     } catch (error) {
       console.error('Error sending request:', error);
-      setError('Failed to send request. Please try again later.');
+      setError(error instanceof Error ? error.message : 'Failed to send request. Please try again later.');
     } finally {
       setIsSendingRequest(false);
     }
